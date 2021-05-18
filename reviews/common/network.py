@@ -9,7 +9,7 @@ class Network:
             useragent = UserAgent()
             headersArr.update(useragent.getRandom())
             response = requests.get(url, headers=headersArr)
-            returnArr = {"code": response.status_code, "headers": response.headers, "body": response.content}
+            returnArr = {"code": response.status_code, "headers": response.headers, "body": response.content.decode()}
         except Exception as e:
             print(e)
 
