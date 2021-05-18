@@ -1,0 +1,7 @@
+.vscode
+coverage
+venv-*
+*.pyc
+*.*-workspace
+__pycache__
+.history
