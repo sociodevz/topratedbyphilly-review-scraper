@@ -1,5 +1,6 @@
 from reviews.main.sites.yelp import Yelp
 from reviews.main.sites.bbb import BBB
+from reviews.main.sites.trustpilot import Trustpilot
 
 import requests
 import sys
