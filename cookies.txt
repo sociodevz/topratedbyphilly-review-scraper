@@ -1,0 +1,9 @@
+# Netscape HTTP Cookie File
+# http://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file!  Do not edit.
+
+www.houzz.com	FALSE	/	TRUE		_csrf	nEL1JaU4TrddTY8Spuys5Pjn
+www.houzz.com	FALSE	/	TRUE		jdv	t7WOzUb2vHLZtWVXHSk%2BXJAXN7ua9zR%2FVEXrbdRdWE2x0B0Xmb%2BpeuTgv56iQQDvVrIod5mmFFqsSh8mdDjji9%2BvtthA
+www.houzz.com	FALSE	/	FALSE		kcan	0
+www.houzz.com	FALSE	/	TRUE	2252135319	v	1621415319_cba31f85-bfaf-4649-b6d8-ade00bb7197b_0446684cfa4e0320b68f29c85e749a6d
+www.houzz.com	FALSE	/	TRUE	1623562899	vct	en-US-vxmX1aRgyBuX1aRgSByX1aRg

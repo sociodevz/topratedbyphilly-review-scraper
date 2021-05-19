@@ -1,6 +1,7 @@
 from reviews.main.sites.yelp import Yelp
 from reviews.main.sites.bbb import BBB
 from reviews.main.sites.trustpilot import Trustpilot
+from reviews.main.sites.houzz import Houzz
 
 import requests
 import sys
@@ -10,8 +11,6 @@ from reviews.common.network import Network
 
 
 class Scraper:
-    SCRAPER_YELP = 'Yelp'
-    SCRAPER_BBB = 'BBB'
     scraper_client = ''
 
     def __init__(self, reviewSite):
