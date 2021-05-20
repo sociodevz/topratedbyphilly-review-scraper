@@ -1,11 +1,13 @@
 import requests
+import sys
+import brotli
 from reviews.common.useragents import UserAgent
 from reviews.common.config import config
 
 
 class Network:
     def fetch(url, headersArr):
-        returnArr = {}
+        returnArr = {"code": 0}
         try:
             if len(headersArr) == 0:
                 useragent = UserAgent()
@@ -16,8 +18,10 @@ class Network:
                 response = requests.get(url, headers=headersArr, proxies=proxies)
             else:
                 response = requests.get(url, headers=headersArr)
-            returnArr = {"code": response.status_code, "headers": response.headers, "body": response.content.decode()}
+
+            returnArr = {"code": response.status_code, "headers": response.headers, "body": response.text}
         except Exception as e:
-            print(e)
+            tb = sys.exc_info()[2]
+            print(e.with_traceback(tb))
 
         return returnArr

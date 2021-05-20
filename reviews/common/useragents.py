@@ -19,7 +19,7 @@ class UserAgent:
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0",
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
             "accept-Language": "en-US,en;q=0.5",
-            "accept-Encoding": "gzip, deflate, br",
+            "accept-Encoding": "gzip, deflate",
             "referer": "https://www.google.com/",
             "dnt": "1",
             "connection": "keep-alive",
@@ -36,7 +36,7 @@ class UserAgent:
             "sec-fetch-mode": "navigate",
             "sec-fetch-dest": "document",
             "referer": "https://www.google.com/",
-            "accept-Encoding": "gzip, deflate, br",
+            "accept-Encoding": "gzip, deflate",
             "accept-Language": "en-GB,en-US;q=0.9,en;q=0.8"
         },
         # Chrome 83 Windows
@@ -50,7 +50,7 @@ class UserAgent:
             "Sec-Fetch-User": "?1",
             "sec-fetch-dest": "document",
             "referer": "https://www.google.com/",
-            "accept-Encoding": "gzip, deflate, br",
+            "accept-Encoding": "gzip, deflate",
             "accept-Language": "en-US,en;q=0.9"
         }
     ]
