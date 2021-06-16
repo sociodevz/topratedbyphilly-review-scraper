@@ -1,6 +1,6 @@
 from requests.sessions import extract_cookies_to_jar
 from reviews.common.useragents import UserAgent
-from typing import Pattern
+from typing import List, Pattern
 import requests
 import sys
 import re
@@ -104,7 +104,8 @@ class Homeadvisor:
         matches = re.findall(pattern, self.scrapedRawData, re.MULTILINE | re.DOTALL)
 
         if len(matches) > 0:
-            result = json.loads(matches[0].strip())
+            result = self.reviewsCleanup(matches[0].strip())
+            result = json.loads(result)
 
         return result
 
@@ -127,6 +128,17 @@ class Homeadvisor:
 
         if userId is not None and professionalId is not None:
             result = f'https://www.houzz.com/j/ajax/profileReviewsAjax?userId={userId}&proId={professionalId}&fromItem=1&itemsPerPage=45'
+
+        return result
+
+    def reviewsCleanup(self, reviewJSON):
+        result = reviewJSON
+
+        result = result.replace(',"@type":"Person"', '')
+        result = result.replace(',"@type":"Review"', '')
+        result = result.replace(',"@type":"Rating"', '')
+        result = result.replace(',"@type":"Thing"', '')
+        result = result.replace(',"@type":"PostalAddress"', '')
 
         return result
 
