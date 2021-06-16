@@ -38,7 +38,7 @@ class Yelp:
 
     def processRawData(self):
         jsonStr = self.extractJSON()
-        print(jsonStr)
+
         return {
             "id": self.extractId(),
             "name": jsonStr['name'],
