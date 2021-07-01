@@ -1,5 +1,5 @@
 config = {
-    'project_physical_root_path': '/var/www/html/toppicks/scraper/',
+    'project_physical_root_path': '/var/www/html/topratedbyphilly/scraper/',
     'scraper_mode': 'online',
     'proxy_url_ip': 'http://zxkewixn-rotate:uoqs3rcgh2ph@p.webshare.io:80',
     'proxy_enabled': False,

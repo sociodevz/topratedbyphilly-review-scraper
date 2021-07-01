@@ -7,7 +7,7 @@ from reviews.common.config import config, updateConfigFromArgs
 import requests
 
 parser = ArgumentParser()
-parser.add_argument('-engine', type=str, required=True, help='Scraping Engine [yelp,bbb,trustpilot,houzz]')
+parser.add_argument('-engine', type=str, required=True, help='Scraping Engine [yelp,bbb,trustpilot,houzz,googlemaps]')
 parser.add_argument('-url', type=str, required=True, help='Website url to crawl')
 args = parser.parse_args()
 
