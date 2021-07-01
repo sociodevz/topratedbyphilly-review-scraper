@@ -12,6 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
 
 from reviews.common.config import config
 
@@ -23,59 +24,77 @@ class Googlemaps:
     def __init__(self, debug=False):
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
-        #self.options.add_argument("--headless")
+        self.options.headless = False
         self.driver = webdriver.Chrome(self.PATH, options=self.options)
 
-        self.location_data["rating"] = "NA"
-        self.location_data["reviews_count"] = "NA"
-        self.location_data["location"] = "NA"
-        self.location_data["contact"] = "NA"
-        self.location_data["website"] = "NA"
-        self.location_data["Time"] = {"Monday": "NA", "Tuesday": "NA", "Wednesday": "NA", "Thursday": "NA", "Friday": "NA", "Saturday": "NA", "Sunday": "NA"}
-        self.location_data["Reviews"] = []
-        self.location_data["Popular Times"] = {"Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": [], "Sunday": []}
+        self.location_data["rating"] = None
+        self.location_data["reviews_count"] = None
+        self.location_data["location"] = None
+        self.location_data["contact"] = None
+        self.location_data["website"] = None
+        self.location_data["time"] = {"monday": None, "tuesday": None, "wednesday": None, "thursday": None, "friday": None, "saturday": None, "sunday": None}
+        self.location_data["reviews"] = []
+        self.location_data["popular_times"] = {"monday": [], "tuesday": [], "Wednesday": [], "thursday": [], "friday": [], "saturday": [], "sunday": []}
 
     def clickOpenCloseTime(self):
-        if(len(list(self.driver.find_elements_by_class_name("LJKBpe-Tswv1b-hour-text")))!=0):
+        if(len(list(self.driver.find_elements_by_class_name("LJKBpe-Tswv1b-hour-text"))) != 0):
             element = self.driver.find_element_by_class_name("LJKBpe-Tswv1b-hour-text")
             self.driver.implicitly_wait(5)
             ActionChains(self.driver).move_to_element(element).click(element).perform()
 
     def clickAllReviewsButton(self):
-
         try:
-            WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "allxGeDnJMl__button")))
+            element = self.driver.find_element_by_css_selector("[aria-label$='reviews']")
+            self.driver.implicitly_wait(5)
+            ActionChains(self.driver).move_to_element(element).click(element).perform()
+            time.sleep(5)
+        except Exception as e:
+            pass
 
-            element = self.driver.find_element_by_class_name("allxGeDnJMl__button")
-            element.click()
-        except:
-            self.driver.quit()
-            return False
-
-        return True
+    def expandAllReviews(self):
+        try:
+            reviews = self.driver.find_elements_by_css_selector("[jsaction='pane.review.expandReview']")
+            for expandReview in reviews:
+                expandReview.click()
+        except Exception as e:
+            pass
 
     def getLocationData(self):
 
+        avg_rating = 0
+        total_reviews = 0
+        address = None
+        phone_number = None
+        website = None
+
         try:
             avg_rating = self.driver.find_element_by_class_name("section-star-array").get_attribute("aria-label")
-            #total_reviews = self.driver.find_element_by_class_name("section-rating-term")
-            #address = self.driver.find_element_by_css_selector("[data-item-id='address']")
-            #phone_number = self.driver.find_element_by_css_selector("[data-tooltip='Copy phone number']")
-            #website = self.driver.find_element_by_css_selector("[data-item-id='authority']")
-        except:
+        except Exception as e:
             pass
-        try:
-            self.location_data["rating"] = str(avg_rating).replace('stars','').strip()
-            reviewCount = len(driver.find_elements_by_xpath("//div[@class='section-review ripple-container']"))
-            while reviewCount <500: #<=== change this number based on your requirement
-                # load the reviews
-                self.driver.find_element_by_xpath("//div[contains(@class,'section-loading-spinner')]").location_once_scrolled_into_view
-                # wait for loading the reviews
-                WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH,"//div[@class='section-loading-overlay-spinner'][@style='display:none']")))
-                # get the reviewsCount
-                reviewCount = len(self.driver.find_elements_by_xpath("//div[@class='section-review ripple-container']"))
 
-            self.location_data["reviews_count"] = total_reviews.text[1:-1]
+        try:
+            total_reviews = int(self.driver.find_element_by_css_selector("[aria-label$='reviews']").text.replace(' reviews', ''))
+        except Exception as e:
+            pass
+
+        try:
+            address = self.driver.find_element_by_css_selector("[data-item-id='address']")
+        except Exception as e:
+            pass
+
+        try:
+            phone_number = self.driver.find_element_by_css_selector("[data-tooltip='Copy phone number']")
+        except Exception as e:
+            pass
+
+        try:
+            website = self.driver.find_element_by_css_selector("[data-item-id='authority']")
+        except Exception as e:
+            pass
+
+        try:
+            self.location_data["rating"] = str(avg_rating).replace('stars', '').strip()
+            self.location_data["reviews_count"] = total_reviews
             self.location_data["location"] = address.text
             self.location_data["contact"] = phone_number.text
             self.location_data["website"] = website.text
@@ -83,27 +102,58 @@ class Googlemaps:
             print(e)
             pass
 
+    def getReviewElements(self):
+        reviewElements = 0
+        try:
+            reviewElements = self.driver.find_elements_by_css_selector("div[data-review-id]")
+        except Exception as e:
+            print(e)
+            pass
+
+        return reviewElements
+
+    def loadAllReviews(self):
+        try:
+            self.clickAllReviewsButton()
+            totalReviewsCount = self.location_data["reviews_count"]
+
+            currentlyLoadedReviews = self.getReviewElements()
+            currentlyLoadedReviewsCnt = len(list(currentlyLoadedReviews))
+            while len(list(currentlyLoadedReviews)) <= totalReviewsCount:
+                lastLoadedReviewElement = currentlyLoadedReviews[-1]
+                self.driver.execute_script('arguments[0].scrollIntoView(true)', lastLoadedReviewElement)
+                time.sleep(2)
+
+                currentlyLoadedReviews = self.getReviewElements()
+        except Exception as e:
+            print(e)
+            pass
 
     def getLocationOpenCloseTime(self):
 
         try:
-            days = self.driver.find_elements_by_class_name("lo7U087hsMA__row-header")
-            times = self.driver.find_elements_by_class_name("lo7U087hsMA__row-interval")
+            openCloseTimesString = self.driver.find_element_by_css_selector("div[aria-label$='Hide open hours for the week']").get_attribute("aria-label")
+            #1st explode by ; for days split
+            #2nd explode by , for day and time split
 
-            day = [a.text for a in days]
-            open_close_time = [a.text for a in times]
+            if openCloseTimesString != '':
+                daysSplitArr = openCloseTimesString.split(';')
+                for dayTimeCombined in daysSplitArr:
+                    dayTimeArr = dayTimeCombined.split(',')
+                    dayNameArr = dayTimeArr[0].strip().split(' ')
+                    dayName = dayNameArr[0].lower().strip()
+                    dayHoursArr = dayTimeArr[1].strip().split('.')
+                    dayHour = dayHoursArr[0].strip()
+                    self.location_data["time"][dayName] = dayHour
 
-            for i, j in zip(day, open_close_time):
-                self.location_data["Time"][i] = j
-
-        except:
+        except Exception as e:
             pass
 
     def getPopularTimes(self):
         try:
             a = self.driver.find_elements_by_class_name("section-popular-times-graph")
-            dic = {0:"Sunday", 1:"Monday", 2:"Tuesday", 3:"Wednesday", 4:"Thursday", 5:"Friday", 6:"Saturday"}
-            l = {"Sunday":[], "Monday":[], "Tuesday":[], "Wednesday":[], "Thursday":[], "Friday":[], "Saturday":[]}
+            dic = {0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday"}
+            l = {"Sunday": [], "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": []}
             count = 0
 
             for i in a:
@@ -114,75 +164,85 @@ class Googlemaps:
                 count = count + 1
 
             for i, j in l.items():
-                self.location_data["Popular Times"][i] = j
-        except:
-            pass
-
-    def scrollThePage(self):
-        try:
-            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "section-layout-root")))
-
-            pause_time = 2
-            max_count = 5
-            x = 0
-
-            while(x<max_count):
-                scrollable_div = self.driver.find_element_by_css_selector('div.section-layout.section-scrollbox.scrollable-y.scrollable-show')
-                try:
-                    self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
-                except:
-                    pass
-                time.sleep(pause_time)
-                x=x+1
-        except:
-            self.driver.quit()
-
-    def expandAllReviews(self):
-        try:
-            element = self.driver.find_elements_by_class_name("section-expand-review")
-            for i in element:
-                i.click()
-        except:
+                self.location_data["popular_times"][i] = j
+        except Exception as e:
             pass
 
     def getReviewsData(self):
         try:
-            review_names = self.driver.find_elements_by_class_name("section-review-title")
-            review_text = self.driver.find_elements_by_class_name("section-review-review-content")
-            review_dates = self.driver.find_elements_by_css_selector("[class='section-review-publish-date']")
-            review_stars = self.driver.find_elements_by_css_selector("[class='section-review-stars']")
+            reviews = self.getReviewElements()
+            if(len(list(reviews)) != 0):
+                previousReviewText = None
 
-            review_stars_final = []
+                self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
 
-            for i in review_stars:
-                review_stars_final.append(i.get_attribute("aria-label"))
+                for review in reviews:
+                    reviewText = review.text
+                    if reviewText not in ['Like', 'Share', 'More', ''] and len(reviewText) > 5:
+                        if reviewText != previousReviewText:
+                            previousReviewText = reviewText
+                            reviewDetailsArr = reviewText.splitlines()
 
-            review_names_list = [a.text for a in review_names]
-            review_text_list = [a.text for a in review_text]
-            review_dates_list = [a.text for a in review_dates]
-            review_stars_list = [a for a in review_stars_final]
+                            if len(reviewDetailsArr) > 0:
+                                reviewerLevelReviewsSplitArr = reviewDetailsArr[1].split('・')
+                                reviewerLevel = None
+                                reviewerTotalReviews = 0
+                                if len(reviewerLevelReviewsSplitArr) > 1:
+                                    reviewerLevel = reviewerLevelReviewsSplitArr[0]
+                                    reviewerTotalReviewsStr = reviewerLevelReviewsSplitArr[1]
+                                else:
+                                    reviewerTotalReviewsStr = reviewerLevelReviewsSplitArr[0]
 
-            for (a,b,c,d) in zip(review_names_list, review_text_list, review_dates_list, review_stars_list):
-                self.location_data["Reviews"].append({"name":a, "review":b, "date":c, "rating":d})
+                                reviewerTotalReviews = int(reviewerTotalReviewsStr.split(' ')[0])
 
+                                finaReview = {}
+                                finaReview['name'] = reviewDetailsArr[0]
+                                finaReview['level'] = reviewerLevel
+                                finaReview['total_reviews'] = reviewerTotalReviews
+                                finaReview['review'] = None
+
+                                if len(reviewDetailsArr) == 3:
+                                    dateDetectionArr = reviewDetailsArr[2].split(' ')
+                                    if dateDetectionArr[2] == 'ago':
+                                        finaReview['date'] = reviewDetailsArr[2]
+                                else:
+                                    finaReview['review'] = reviewDetailsArr[3]
+
+                                html_content = review.get_attribute('innerHTML')
+                                self.browserReviews.get("data:text/html;charset=utf-8,{html_content}".format(html_content=html_content))
+
+                                reviewRating = 0
+                                try:
+                                    reviewRatingStr = self.browserReviews.find_element_by_css_selector("span[aria-label$='stars ']").get_attribute("aria-label").strip()
+                                    reviewRatingArr = reviewRatingStr.split(' ')
+                                    reviewRating = int(reviewRatingArr[0].strip())
+                                except Exception as e:
+                                    reviewRatingStr = self.browserReviews.find_element_by_css_selector("span[aria-label$='star ']").get_attribute("aria-label").strip()
+                                    reviewRatingArr = reviewRatingStr.split(' ')
+                                    reviewRating = int(reviewRatingArr[0].strip())
+                                    pass
+
+                                finaReview['rating'] = reviewRating
+                                self.location_data["reviews"].append(finaReview)
+                                self.location_data["reviews_extracted"] = len(self.location_data["reviews"])
+                self.browser.quit()
         except Exception as e:
+            print(e)
             pass
 
     def scrapeURL(self, url):
         try:
             self.driver.get(url)
+            time.sleep(5)
         except Exception as e:
             print(e)
             self.driver.quit()
-        time.sleep(2)
 
-        self.clickOpenCloseTime()
+        #self.clickOpenCloseTime()
+        #self.getLocationOpenCloseTime()
         self.getLocationData()
-        self.getLocationOpenCloseTime()
-        self.getPopularTimes()
-        self.clickAllReviewsButton()
-        time.sleep(5)
-        self.scrollThePage()
+        #self.getPopularTimes()
+        self.loadAllReviews()
         self.expandAllReviews()
         self.getReviewsData()
         self.driver.quit()
