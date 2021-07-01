@@ -24,7 +24,7 @@ class Googlemaps:
     def __init__(self, debug=False):
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
-        self.options.headless = False
+        self.options.headless = True
         self.driver = webdriver.Chrome(self.PATH, options=self.options)
 
         self.location_data["rating"] = None
