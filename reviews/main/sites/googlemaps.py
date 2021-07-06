@@ -25,7 +25,8 @@ class Googlemaps:
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
         self.options.headless = True
-        self.driver = webdriver.Chrome(self.PATH, options=self.options)
+        self.browser = webdriver.Chrome(self.PATH, options=self.options)
+        self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
 
         self.location_data["rating"] = None
         self.location_data["reviews_count"] = None
@@ -37,23 +38,23 @@ class Googlemaps:
         self.location_data["popular_times"] = {"monday": [], "tuesday": [], "Wednesday": [], "thursday": [], "friday": [], "saturday": [], "sunday": []}
 
     def clickOpenCloseTime(self):
-        if(len(list(self.driver.find_elements_by_class_name("LJKBpe-Tswv1b-hour-text"))) != 0):
-            element = self.driver.find_element_by_class_name("LJKBpe-Tswv1b-hour-text")
-            self.driver.implicitly_wait(5)
-            ActionChains(self.driver).move_to_element(element).click(element).perform()
+        if(len(list(self.browser.find_elements_by_class_name("LJKBpe-Tswv1b-hour-text"))) != 0):
+            element = self.browser.find_element_by_class_name("LJKBpe-Tswv1b-hour-text")
+            self.browser.implicitly_wait(5)
+            ActionChains(self.browser).move_to_element(element).click(element).perform()
 
     def clickAllReviewsButton(self):
         try:
-            element = self.driver.find_element_by_css_selector("[aria-label$='reviews']")
-            self.driver.implicitly_wait(5)
-            ActionChains(self.driver).move_to_element(element).click(element).perform()
+            element = self.browser.find_element_by_css_selector("[aria-label$='reviews']")
+            self.browser.implicitly_wait(5)
+            ActionChains(self.browser).move_to_element(element).click(element).perform()
             time.sleep(5)
         except Exception as e:
             pass
 
     def expandAllReviews(self):
         try:
-            reviews = self.driver.find_elements_by_css_selector("[jsaction='pane.review.expandReview']")
+            reviews = self.browser.find_elements_by_css_selector("[jsaction='pane.review.expandReview']")
             for expandReview in reviews:
                 expandReview.click()
         except Exception as e:
@@ -68,27 +69,27 @@ class Googlemaps:
         website = None
 
         try:
-            avg_rating = self.driver.find_element_by_class_name("section-star-array").get_attribute("aria-label")
+            avg_rating = self.browser.find_element_by_class_name("section-star-array").get_attribute("aria-label")
         except Exception as e:
             pass
 
         try:
-            total_reviews = int(self.driver.find_element_by_css_selector("[aria-label$='reviews']").text.replace(' reviews', ''))
+            total_reviews = int(self.browser.find_element_by_css_selector("[aria-label$='reviews']").text.replace(' reviews', ''))
         except Exception as e:
             pass
 
         try:
-            address = self.driver.find_element_by_css_selector("[data-item-id='address']")
+            address = self.browser.find_element_by_css_selector("[data-item-id='address']")
         except Exception as e:
             pass
 
         try:
-            phone_number = self.driver.find_element_by_css_selector("[data-tooltip='Copy phone number']")
+            phone_number = self.browser.find_element_by_css_selector("[data-tooltip='Copy phone number']")
         except Exception as e:
             pass
 
         try:
-            website = self.driver.find_element_by_css_selector("[data-item-id='authority']")
+            website = self.browser.find_element_by_css_selector("[data-item-id='authority']")
         except Exception as e:
             pass
 
@@ -105,7 +106,7 @@ class Googlemaps:
     def getReviewElements(self):
         reviewElements = 0
         try:
-            reviewElements = self.driver.find_elements_by_css_selector("div[data-review-id]")
+            reviewElements = self.browser.find_elements_by_css_selector("div[data-review-id]")
         except Exception as e:
             print(e)
             pass
@@ -121,7 +122,7 @@ class Googlemaps:
             currentlyLoadedReviewsCnt = len(list(currentlyLoadedReviews))
             while len(list(currentlyLoadedReviews)) <= totalReviewsCount:
                 lastLoadedReviewElement = currentlyLoadedReviews[-1]
-                self.driver.execute_script('arguments[0].scrollIntoView(true)', lastLoadedReviewElement)
+                self.browser.execute_script('arguments[0].scrollIntoView(true)', lastLoadedReviewElement)
                 time.sleep(2)
 
                 currentlyLoadedReviews = self.getReviewElements()
@@ -132,7 +133,7 @@ class Googlemaps:
     def getLocationOpenCloseTime(self):
 
         try:
-            openCloseTimesString = self.driver.find_element_by_css_selector("div[aria-label$='Hide open hours for the week']").get_attribute("aria-label")
+            openCloseTimesString = self.browser.find_element_by_css_selector("div[aria-label$='Hide open hours for the week']").get_attribute("aria-label")
             #1st explode by ; for days split
             #2nd explode by , for day and time split
 
@@ -151,7 +152,7 @@ class Googlemaps:
 
     def getPopularTimes(self):
         try:
-            a = self.driver.find_elements_by_class_name("section-popular-times-graph")
+            a = self.browser.find_elements_by_class_name("section-popular-times-graph")
             dic = {0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday"}
             l = {"Sunday": [], "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": []}
             count = 0
@@ -173,8 +174,6 @@ class Googlemaps:
             reviews = self.getReviewElements()
             if(len(list(reviews)) != 0):
                 previousReviewText = None
-
-                self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
 
                 for review in reviews:
                     reviewText = review.text
@@ -232,19 +231,20 @@ class Googlemaps:
 
     def scrapeURL(self, url):
         try:
-            self.driver.get(url)
+            self.browser.get(url)
             time.sleep(5)
         except Exception as e:
             print(e)
-            self.driver.quit()
+            self.browser.quit()
 
-        #self.clickOpenCloseTime()
-        #self.getLocationOpenCloseTime()
+        self.clickOpenCloseTime()
+        self.getLocationOpenCloseTime()
         self.getLocationData()
-        #self.getPopularTimes()
+        self.getPopularTimes()
         self.loadAllReviews()
         self.expandAllReviews()
         self.getReviewsData()
-        self.driver.quit()
+        self.browser.quit()
+        self.browserReviews.quit()
 
         return(self.location_data)
