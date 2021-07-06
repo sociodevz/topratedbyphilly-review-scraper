@@ -2,3 +2,4 @@ requests
 argparse
 brotli
 selenium
+flask
