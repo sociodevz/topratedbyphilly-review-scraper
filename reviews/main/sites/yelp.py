@@ -4,6 +4,9 @@ import sys
 import re
 import os
 import json
+import math
+from random import randint, random, randrange
+from time import sleep
 from reviews.common.network import Network
 from reviews.common.config import config
 
@@ -44,12 +47,11 @@ class Yelp:
             "name": jsonStr['name'],
             "telephone": jsonStr['telephone'],
             "address": jsonStr['address'],
-            "reviews": jsonStr['review'],
+            "reviews": self.fetchReviews(self.generateReviewUrl(self.extractId()), jsonStr['aggregateRating']['reviewCount']),
             "rating": {
                 "aggregate": jsonStr['aggregateRating']['ratingValue'],
                 "total": jsonStr['aggregateRating']['reviewCount'],
             },
-            "review_url": self.generateReviewUrl(self.extractId())
         }
 
     def extractJSON(self):
@@ -64,7 +66,7 @@ class Yelp:
 
     def extractId(self):
         result = None
-        pattern = r"meta name=\"yelp-biz-id\" content=\"(.*?)\""
+        pattern = r"meta.*?name=\"yelp-biz-id\" content=\"(.*?)\""
         matches = re.findall(pattern, self.scrapedRawData, re.MULTILINE)
 
         if len(matches) > 0:
@@ -85,3 +87,23 @@ class Yelp:
     def generateReviewUrl(self, businessId):
         return f"https://www.yelp.com/biz/{businessId}/review_feed?rl=en&q=&sort_by=relevance_desc"
 
+    def fetchReviews(self, reviewBaseUrl, totalReviews):
+        result = []
+
+        for i in range(math.ceil(int(totalReviews/10))+1):
+            if i < 1:
+                appendPage = ''
+            else:
+                appendPage = f"&start={i*10}"
+
+            reviewUrl = f"{reviewBaseUrl}{appendPage}"
+            scrapedRawData = Network.fetch(reviewUrl, {})
+            if(scrapedRawData['code'] == 200):
+                reviewsRawData = json.loads(scrapedRawData['body'])
+                if 'reviews' in reviewsRawData:
+                    if len(reviewsRawData['reviews']) > 0:
+                        for review in reviewsRawData['reviews']:
+                            result.append(review)
+                sleep(randrange(1, 3))
+
+        return result
