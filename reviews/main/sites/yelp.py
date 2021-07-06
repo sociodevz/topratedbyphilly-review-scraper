@@ -64,7 +64,7 @@ class Yelp:
 
     def extractId(self):
         result = None
-        pattern = r"meta name=\"yelp-biz-id\" content=\"(.*?)\""
+        pattern = r"meta.*?name=\"yelp-biz-id\" content=\"(.*?)\""
         matches = re.findall(pattern, self.scrapedRawData, re.MULTILINE)
 
         if len(matches) > 0:
