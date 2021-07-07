@@ -19,7 +19,7 @@ class Network:
             else:
                 response = requests.get(url, headers=headersArr)
 
-            returnArr = {"code": response.status_code, "headers": response.headers, "body": response.text}
+            returnArr = {"code": response.status_code, "headers": {"requested": headersArr, "received": response.headers}, "body": response.text}
         except Exception as e:
             tb = sys.exc_info()[2]
             print(e.with_traceback(tb))
