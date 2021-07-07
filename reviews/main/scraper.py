@@ -1,5 +1,5 @@
 from reviews.main.sites.yelp import Yelp
-from reviews.main.sites.bbb import BBB
+from reviews.main.sites.bbb import Bbb
 from reviews.main.sites.trustpilot import Trustpilot
 from reviews.main.sites.houzz import Houzz
 from reviews.main.sites.homeadvisor import Homeadvisor
