@@ -13,7 +13,9 @@ from reviews.common.config import config
 
 class Yelp:
 
-    scrapedRawData = ''
+    siteUrl = None
+    scrapedRawData = None
+    siteHeaders = None
 
     def __init__(self):
         print('Initalized Yelp Engine')
@@ -22,10 +24,15 @@ class Yelp:
     def scrapeURL(self, url):
         returnArr = []
 
+        self.siteUrl = url
+
         if config.get('scraper_mode') == 'online':
             headersArr = {}
             scrapedRawData = Network.fetch(url, headersArr)
             if(scrapedRawData['code'] == 200):
+                self.siteHeaders = scrapedRawData['headers']['requested']
+                self.siteHeaders['referer'] = self.siteUrl
+
                 self.scrapedRawData = scrapedRawData['body']
         elif config.get('scraper_mode') == 'offline':
             filePath = os.path.realpath(__file__)
@@ -97,7 +104,7 @@ class Yelp:
                 appendPage = f"&start={i*10}"
 
             reviewUrl = f"{reviewBaseUrl}{appendPage}"
-            scrapedRawData = Network.fetch(reviewUrl, {})
+            scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
             if(scrapedRawData['code'] == 200):
                 reviewsRawData = json.loads(scrapedRawData['body'])
                 if 'reviews' in reviewsRawData:
