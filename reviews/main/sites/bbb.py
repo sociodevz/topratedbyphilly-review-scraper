@@ -61,11 +61,11 @@ class Bbb:
 
     def extractJSON(self):
         result = None
-        pattern = r"<script type=\"application/ld\+json\">.*?({\"@context\":\"https://schema\.org\",\"@type\":\"LocalBusiness\".*?);.*?</script>"
+        pattern = r"<script type=\"application/ld\+json\">.*?({\"@context\":\"https://schema\.org\",\"@type\":\"LocalBusiness\".*?)</script>"
         matches = re.findall(pattern, self.scrapedRawData, re.DOTALL | re.MULTILINE)
 
         if len(matches) > 0:
-            result = matches[0]
+            result = matches[0].strip().strip(';')
 
         return json.loads(result)
 
