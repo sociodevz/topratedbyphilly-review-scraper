@@ -1,24 +1,7 @@
-
+from datetime import datetime
 
 class ReviewFormatter:
     platform = None
-    reviewTemplate = {
-        "id": 0,
-        "user": {
-            "id": None,
-            "name": None,
-            "level": None,
-            "reviews": {
-                "total": 0
-            },
-        },
-        "review": {
-            "rating": None,
-            "text": None,
-        },
-        "date": None,
-        "platform_specific": {}
-    }
 
     def __init__(self, platform):
         self.platform = platform
@@ -26,11 +9,14 @@ class ReviewFormatter:
 
     def format(self, reviewObj):
         if self.platform == "googlemaps":
-            result = self._formatGoogleMapsReviews(reviewObj)
+            result = self._formatGoogleMapsReview(reviewObj)
         elif self.platform == "bbb":
-            result = self._formatBbbReviews(reviewObj)
+            result = self._formatBbbReview(reviewObj)
         elif self.platform == "yelp":
-            result = self._formatYelpReviews(reviewObj)
+            result = self._formatYelpReview(reviewObj)
+        elif self.platform == "homeadvisor":
+            result = self._formatHomeAdvisorReview(reviewObj)
+
 
         return result
 
@@ -56,7 +42,7 @@ class ReviewFormatter:
 
         return result
 
-    def _formatGoogleMapsReviews(self, reviewObj):
+    def _formatGoogleMapsReview(self, reviewObj):
         result = self._getTemplate()
 
         result["id"] = reviewObj["review_id"]
@@ -71,7 +57,7 @@ class ReviewFormatter:
 
         return result
 
-    def _formatBbbReviews(self, reviewObj):
+    def _formatBbbReview(self, reviewObj):
         result = self._getTemplate()
 
         result["id"] = reviewObj["id"]
@@ -87,7 +73,7 @@ class ReviewFormatter:
 
         return result
 
-    def _formatYelpReviews(self, reviewObj):
+    def _formatYelpReview(self, reviewObj):
         result = self._getTemplate()
 
         result["id"] = reviewObj["id"]
@@ -100,6 +86,30 @@ class ReviewFormatter:
         result["review"]["text"] = reviewObj["comment"]["text"]
         result["date"] = reviewObj['localizedDate']
 
+        result["dump"] = reviewObj
+
+        return result
+
+    def _formatHomeAdvisorReview(self, reviewObj):
+        result = self._getTemplate()
+
+        result["id"] = reviewObj["ratingID"]
+        result["user"]["id"] = reviewObj["consumerID"]
+        result["user"]["name"] = reviewObj["consumerName"]
+        result["user"]["level"] = None
+        result["user"]["reviews"]["total"] = None
+
+        result["review"]["rating"] = reviewObj["consumerOverallScore"]
+        result["review"]["text"] = reviewObj["comment"]
+        result["date"] = datetime.fromtimestamp((reviewObj['createDate']/1000)).isoformat()
+
+        result["misc"] = {
+            "user": {
+                "city": reviewObj["consumerCity"],
+                "state": reviewObj["consumerState"],
+                "zip": reviewObj["consumerZip"]
+            }
+        }
         result["dump"] = reviewObj
 
         return result

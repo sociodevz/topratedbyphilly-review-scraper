@@ -6,13 +6,20 @@ import sys
 import re
 import os
 import json
+import math
+from random import randint, random, randrange
+from time import sleep
 from reviews.common.network import Network
 from reviews.common.config import config
+from reviews.main.reviews_formatter import ReviewFormatter
 
 
 class Homeadvisor:
-    scrapedRawData = ''
-    scrapedRawReviewsData = ''
+
+    siteUrl = None
+    scrapedRawData = None
+    scrapedRawReviewsData = None
+    siteHeaders = None
 
     def __init__(self):
         print('Initalized Homeadvisor Engine')
@@ -20,6 +27,8 @@ class Homeadvisor:
 
     def scrapeURL(self, url):
         returnArr = []
+
+        self.siteUrl = url
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
@@ -30,7 +39,11 @@ class Homeadvisor:
             scrapedRawData = Network.fetch(url, headersArr)
 
             if(scrapedRawData['code'] == 200):
+                self.siteHeaders = scrapedRawData['headers']['requested']
+                self.siteHeaders['referer'] = self.siteUrl
+
                 self.scrapedRawData = scrapedRawData['body']
+
         elif config.get('scraper_mode') == 'offline':
             filePath = os.path.realpath(__file__)
             currentFileName = os.path.basename(__file__)
@@ -68,12 +81,11 @@ class Homeadvisor:
             "name": jsonStr['name'],
             "telephone": jsonStr['telephone'],
             "address": jsonStr['address'],
-            "reviews": jsonStr['review'],
+            "reviews": self.fetchReviews(self.generateReviewUrl(self.extractId(jsonStr['@id'])), jsonStr['aggregateRating']['reviewCount']),
             "rating": {
                 "aggregate": jsonStr['aggregateRating']['ratingValue'],
                 "total": jsonStr['aggregateRating']['reviewCount'],
             },
-            "review_url": self.extractNextPageUrl()
         }
 
     def extractId(self, dataStr):
@@ -109,25 +121,8 @@ class Homeadvisor:
 
         return result
 
-    def extractNextPageUrl(self):
-        result = None
-
-        userId = None
-        professionalId = None
-
-        pattern = r"UserProfileStore\":{\"prereqs\":.*?,\"data\":{\"user\":{\"id\":.*?,\"userId\":(.*?),\"userName\""
-        matches = re.findall(pattern, self.scrapedRawData, re.MULTILINE)
-
-        if len(matches) > 0:
-            userId = matches[0].strip()
-
-        pattern = r"professional\":{\"id\":(.*?),\"proType"
-        matches = re.findall(pattern, self.scrapedRawData, re.MULTILINE)
-        if len(matches) > 0:
-            professionalId = matches[0].strip()
-
-        if userId is not None and professionalId is not None:
-            result = f'https://www.houzz.com/j/ajax/profileReviewsAjax?userId={userId}&proId={professionalId}&fromItem=1&itemsPerPage=45'
+    def generateReviewUrl(self, businessId):
+        result = f"https://www.homeadvisor.com/sm/reviews/{businessId}?page=PAGE_NUMBER&sort=newest&pageSize=10"
 
         return result
 
@@ -139,6 +134,24 @@ class Homeadvisor:
         result = result.replace(',"@type":"Rating"', '')
         result = result.replace(',"@type":"Thing"', '')
         result = result.replace(',"@type":"PostalAddress"', '')
+
+        return result
+
+    def fetchReviews(self, reviewBaseUrl, totalReviews):
+        result = []
+
+        reviewFormatter = ReviewFormatter('homeadvisor')
+        for i in range(math.ceil(int(totalReviews/10))+1):
+            reviewUrl = reviewBaseUrl.replace("PAGE_NUMBER", str(i+1))
+            scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
+            if(scrapedRawData['code'] == 200):
+                reviewsRawData = json.loads(scrapedRawData['body'])
+                if 'ratings' in reviewsRawData:
+                    if len(reviewsRawData['ratings']) > 0:
+                        for review in reviewsRawData['ratings']:
+                            formattedReview = reviewFormatter.format(review)
+                            result.append(formattedReview)
+                sleep(randrange(1, 3))
 
         return result
 
