@@ -8,6 +8,7 @@ from random import randint, random, randrange
 from time import sleep
 from reviews.common.network import Network
 from reviews.common.config import config
+from reviews.main.reviews_formatter import ReviewFormatter
 
 class Bbb:
 
@@ -128,6 +129,7 @@ class Bbb:
             self.siteHeaders = useragent.getRandom()
             self.siteHeaders['referer'] = self.generateReviewUrl
 
+        reviewFormatter = ReviewFormatter('bbb')
         for i in range(math.ceil(int(totalReviews/10))+1):
             reviewUrl = reviewBaseUrl.replace('PAGEID', str(i+1))
             scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
@@ -136,7 +138,8 @@ class Bbb:
                 if 'items' in reviewsRawData:
                     if len(reviewsRawData['items']) > 0:
                         for review in reviewsRawData['items']:
-                            result.append(review)
+                            formattedReview = reviewFormatter.format(review)
+                            result.append(formattedReview)
                 sleep(randrange(1, 3))
 
         return result

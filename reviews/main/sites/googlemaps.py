@@ -15,6 +15,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 
 from reviews.common.config import config
+from reviews.main.reviews_formatter import ReviewFormatter
 
 
 class Googlemaps:
@@ -203,6 +204,7 @@ class Googlemaps:
             if(len(list(reviews)) != 0):
                 previousReviewText = None
 
+                reviewFormatter = ReviewFormatter('googlemaps')
                 for review in reviews:
                     reviewText = review.text
                     if reviewText not in ['Like', 'Share', 'More', ''] and len(reviewText) > 5:
@@ -273,7 +275,9 @@ class Googlemaps:
                                     pass
 
                                 finaReview['rating'] = reviewRating
-                                self.location_data["reviews"].append(finaReview)
+
+                                formattedReview = reviewFormatter.format(finaReview)
+                                self.location_data["reviews"].append(formattedReview)
                                 self.location_data["reviews_extracted"] = len(self.location_data["reviews"])
                 self.browser.quit()
         except Exception as e:
