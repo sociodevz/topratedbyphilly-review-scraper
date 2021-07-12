@@ -9,6 +9,7 @@ from random import randint, random, randrange
 from time import sleep
 from reviews.common.network import Network
 from reviews.common.config import config
+from reviews.main.reviews_formatter import ReviewFormatter
 
 
 class Yelp:
@@ -97,6 +98,7 @@ class Yelp:
     def fetchReviews(self, reviewBaseUrl, totalReviews):
         result = []
 
+        reviewFormatter = ReviewFormatter('yelp')
         for i in range(math.ceil(int(totalReviews/10))+1):
             if i < 1:
                 appendPage = ''
@@ -110,7 +112,8 @@ class Yelp:
                 if 'reviews' in reviewsRawData:
                     if len(reviewsRawData['reviews']) > 0:
                         for review in reviewsRawData['reviews']:
-                            result.append(review)
+                            formattedReview = reviewFormatter.format(review)
+                            result.append(formattedReview)
                 sleep(randrange(1, 3))
 
         return result
