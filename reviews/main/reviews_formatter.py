@@ -29,7 +29,8 @@ class ReviewFormatter:
             result = self._formatGoogleMapsReviews(reviewObj)
         elif self.platform == "bbb":
             result = self._formatBbbReviews(reviewObj)
-
+        elif self.platform == "yelp":
+            result = self._formatYelpReviews(reviewObj)
 
         return result
 
@@ -49,7 +50,8 @@ class ReviewFormatter:
                 "text": None,
             },
             "date": None,
-            "platform_specific": {}
+            "misc": {},
+            "dump": {}
         }
 
         return result
@@ -82,5 +84,22 @@ class ReviewFormatter:
         if len(reviewObj["extendedText"]) > 0:
             result["review"]["text"] = reviewObj["extendedText"][0]["text"]
         result["date"] = f"{reviewObj['date']['year']}-{reviewObj['date']['month']}-{reviewObj['date']['day']}"
+
+        return result
+
+    def _formatYelpReviews(self, reviewObj):
+        result = self._getTemplate()
+
+        result["id"] = reviewObj["id"]
+        result["user"]["id"] = reviewObj["userId"]
+        result["user"]["name"] = reviewObj["user"]["markupDisplayName"]
+        result["user"]["level"] = None
+        result["user"]["reviews"]["total"] = reviewObj["user"]["reviewCount"]
+
+        result["review"]["rating"] = reviewObj["rating"]
+        result["review"]["text"] = reviewObj["comment"]["text"]
+        result["date"] = reviewObj['localizedDate']
+
+        result["dump"] = reviewObj
 
         return result
