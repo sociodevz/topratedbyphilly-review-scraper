@@ -16,6 +16,8 @@ class ReviewFormatter:
             result = self._formatYelpReview(reviewObj)
         elif self.platform == "homeadvisor":
             result = self._formatHomeAdvisorReview(reviewObj)
+        elif self.platform == "houzz":
+            result = self._formatHouzzReview(reviewObj)
 
 
         return result
@@ -110,6 +112,22 @@ class ReviewFormatter:
                 "zip": reviewObj["consumerZip"]
             }
         }
+        result["dump"] = reviewObj
+
+        return result
+
+    def _formatHouzzReview(self, reviewObj):
+        result = self._getTemplate()
+
+        result["id"] = reviewObj["reviewId"]
+        result["user"]["id"] = reviewObj["userId"]
+        result["user"]["name"] = reviewObj["user_info"]["displayName"]
+        result["user"]["level"] = None
+        result["user"]["reviews"]["total"] = None
+
+        result["review"]["rating"] = reviewObj["rating"]
+        result["review"]["text"] = reviewObj["body"]
+        result["date"] = datetime.fromtimestamp((reviewObj['created'])).isoformat()
         result["dump"] = reviewObj
 
         return result
