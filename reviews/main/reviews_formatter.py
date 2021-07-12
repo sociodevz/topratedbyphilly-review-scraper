@@ -18,6 +18,8 @@ class ReviewFormatter:
             result = self._formatHomeAdvisorReview(reviewObj)
         elif self.platform == "houzz":
             result = self._formatHouzzReview(reviewObj)
+        elif self.platform == "trustpilot":
+            result = self._formatTrustPilotReview(reviewObj)
 
 
         return result
@@ -128,6 +130,29 @@ class ReviewFormatter:
         result["review"]["rating"] = reviewObj["rating"]
         result["review"]["text"] = reviewObj["body"]
         result["date"] = datetime.fromtimestamp((reviewObj['created'])).isoformat()
+        result["dump"] = reviewObj
+
+        return result
+
+    def _formatTrustPilotReview(self, reviewObj):
+        result = self._getTemplate()
+
+        result["id"] = 0
+        result["user"]["id"] = 0
+        result["user"]["name"] = reviewObj["author"]["name"]
+        result["user"]["level"] = None
+        result["user"]["reviews"]["total"] = None
+
+        result["review"]["rating"] = int(reviewObj["reviewRating"]["ratingValue"])
+        result["review"]["text"] = reviewObj["reviewBody"]
+        result["date"] = reviewObj['datePublished']
+
+        result["misc"] = {
+            "review": {
+                "headline": reviewObj["headline"]
+            }
+        }
+
         result["dump"] = reviewObj
 
         return result

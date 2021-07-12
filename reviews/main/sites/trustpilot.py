@@ -4,13 +4,19 @@ import sys
 import re
 import os
 import json
+import math
+from random import randint, random, randrange
+from time import sleep
 from reviews.common.network import Network
 from reviews.common.config import config
+from reviews.main.reviews_formatter import ReviewFormatter
 
 
 class Trustpilot:
 
-    scrapedRawData = ''
+    siteUrl = None
+    scrapedRawData = None
+    siteHeaders = None
 
     def __init__(self):
         print('Initalized TrustPilot Engine')
@@ -19,10 +25,15 @@ class Trustpilot:
     def scrapeURL(self, url):
         returnArr = []
 
+        self.siteUrl = url
+
         if config.get('scraper_mode') == 'online':
             headersArr = {}
             scrapedRawData = Network.fetch(url, headersArr)
             if(scrapedRawData['code'] == 200):
+                self.siteHeaders = scrapedRawData['headers']['requested']
+                self.siteHeaders['referer'] = self.siteUrl
+
                 self.scrapedRawData = scrapedRawData['body']
         elif config.get('scraper_mode') == 'offline':
             filePath = os.path.realpath(__file__)
@@ -42,14 +53,13 @@ class Trustpilot:
         return {
             "id": jsonStr['@id'],
             "name": jsonStr['name'],
-            "telephone": jsonStr['telephone'],
+            "telephone": None,
             "address": jsonStr['address'],
-            "reviews": jsonStr['review'],
+            "reviews": self.fetchReviews(jsonStr['review'], self.extractNextPageUrl()),
             "rating": {
                 "aggregate": jsonStr['aggregateRating']['ratingValue'],
                 "total": jsonStr['aggregateRating']['reviewCount'],
             },
-            "review_url": self.extractNextPageUrl()
         }
 
     def extractJSON(self):
@@ -58,9 +68,21 @@ class Trustpilot:
         matches = re.findall(pattern, self.scrapedRawData, re.MULTILINE)
 
         if len(matches) > 0:
-            result = json.loads(matches[0].strip())
+            result = self.reviewsCleanup(matches[0].strip())
+            result = json.loads(result)
 
         return result[0]
+
+    def reviewsCleanup(self, reviewJSON):
+        result = reviewJSON
+
+        result = result.replace(',"@type":"Person"', '')
+        result = result.replace(',"@type":"Review"', '')
+        result = result.replace(',"@type":"Rating"', '')
+        result = result.replace(',"@type":"Thing"', '')
+        result = result.replace(',"@type":"PostalAddress"', '')
+
+        return result
 
     def extractNextPageUrl(self):
         result = None
@@ -69,6 +91,31 @@ class Trustpilot:
 
         if len(matches) > 0:
             result = matches[0].strip()
+
+        return result
+
+    def fetchReviews(self,  currentReviews, reviewBaseUrl):
+        result = []
+
+        reviewFormatter = ReviewFormatter('trustpilot')
+
+        if len(currentReviews) > 0:
+            for review in currentReviews:
+                formattedReview = reviewFormatter.format(review)
+                result.append(formattedReview)
+
+        while reviewBaseUrl is not None:
+            scrapedRawData = Network.fetch(reviewBaseUrl, self.siteHeaders)
+            if(scrapedRawData['code'] == 200):
+                self.scrapedRawData = scrapedRawData['body']
+                reviewBaseUrl = self.extractNextPageUrl()
+                jsonStr = self.extractJSON()
+                for review in jsonStr['review']:
+                    formattedReview = reviewFormatter.format(review)
+                    result.append(formattedReview)
+
+
+                sleep(randrange(1, 3))
 
         return result
 
