@@ -6,13 +6,19 @@ import sys
 import re
 import os
 import json
+import math
+from random import randint, random, randrange
+from time import sleep
 from reviews.common.network import Network
 from reviews.common.config import config
-
+from reviews.main.reviews_formatter import ReviewFormatter
 
 class Houzz:
-    scrapedRawData = ''
-    scrapedRawReviewsData = ''
+
+    siteUrl = None
+    scrapedRawData = None
+    scrapedRawReviewsData = None
+    siteHeaders = None
 
     def __init__(self):
         print('Initalized Houzz Engine')
@@ -20,6 +26,8 @@ class Houzz:
 
     def scrapeURL(self, url):
         returnArr = []
+
+        self.siteUrl = url
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
@@ -29,6 +37,9 @@ class Houzz:
             headersArr.update(userAgentList)
             scrapedRawData = Network.fetch(url, headersArr)
             if(scrapedRawData['code'] == 200):
+                self.siteHeaders = scrapedRawData['headers']['requested']
+                self.siteHeaders['referer'] = self.siteUrl
+
                 self.scrapedRawData = scrapedRawData['body']
         elif config.get('scraper_mode') == 'offline':
             filePath = os.path.realpath(__file__)
@@ -66,12 +77,11 @@ class Houzz:
             "name": jsonStr['name'],
             "telephone": jsonStr['telephone'],
             "address": jsonStr['address'],
-            "reviews": [],
+            "reviews": self.fetchReviews(self.generateReviewUrl(), int(jsonStr['aggregateRating']['reviewCount'])),
             "rating": {
                 "aggregate": jsonStr['aggregateRating']['ratingValue'],
-                "total": jsonStr['aggregateRating']['reviewCount'],
+                "total": int(jsonStr['aggregateRating']['reviewCount']),
             },
-            "review_url": self.extractNextPageUrl()
         }
 
     def extractJSON(self):
@@ -84,7 +94,7 @@ class Houzz:
 
         return result[0]
 
-    def extractNextPageUrl(self):
+    def generateReviewUrl(self):
         result = None
 
         userId = None
@@ -102,7 +112,7 @@ class Houzz:
             professionalId = matches[0].strip()
 
         if userId is not None and professionalId is not None:
-            result = f'https://www.houzz.com/j/ajax/profileReviewsAjax?userId={userId}&proId={professionalId}&fromItem=1&itemsPerPage=45'
+            result = f'https://www.houzz.com/j/ajax/profileReviewsAjax?userId={userId}&proId={professionalId}&fromItem=ITEM_NUMBER&itemsPerPage=45'
 
         return result
 
@@ -114,6 +124,38 @@ class Houzz:
 
         if len(matches) > 0:
             result = matches[0].strip()
+
+        return result
+
+    def fetchReviews(self, reviewBaseUrl, totalReviews):
+        result = []
+
+        self.siteHeaders.update({
+            'referer': self.siteUrl,
+            'x-requested-with': 'XMLHttpRequest',
+        })
+
+        reviewFormatter = ReviewFormatter('houzz')
+        for i in range(math.ceil(int(totalReviews/45))+1):
+            reviewUrl = reviewBaseUrl.replace("ITEM_NUMBER", str(i+1))
+            scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
+            if(scrapedRawData['code'] == 200):
+                reviewsRawData = json.loads(scrapedRawData['body'])
+                if 'ctx' in reviewsRawData:
+                    if 'data' in reviewsRawData['ctx']:
+                        if 'stores' in reviewsRawData['ctx']['data']:
+                            if 'data' in reviewsRawData['ctx']['data']['stores']:
+                                if 'ProfessionalReviewsStore' in reviewsRawData['ctx']['data']['stores']['data']:
+                                    if len(reviewsRawData['ctx']['data']['stores']['data']['ProfessionalReviewsStore']['data']) > 0:
+                                        for reviewId in reviewsRawData['ctx']['data']['stores']['data']['ProfessionalReviewsStore']['data']:
+                                            review = reviewsRawData['ctx']['data']['stores']['data']['ProfessionalReviewsStore']['data'][reviewId]
+                                            reviewerId = review['userId']
+                                            userInfoArr = reviewsRawData['ctx']['data']['stores']['data']['UserStore']['data'][str(reviewerId)]
+                                            review['user_info'] = userInfoArr
+                                            formattedReview = reviewFormatter.format(review)
+                                            result.append(formattedReview)
+
+                sleep(randrange(1, 3))
 
         return result
 
