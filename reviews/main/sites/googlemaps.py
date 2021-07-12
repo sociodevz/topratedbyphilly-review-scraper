@@ -28,14 +28,20 @@ class Googlemaps:
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
         self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
 
-        self.location_data["rating"] = None
-        self.location_data["reviews_count"] = None
-        self.location_data["location"] = None
-        self.location_data["contact"] = None
-        self.location_data["website"] = None
-        self.location_data["time"] = {"monday": None, "tuesday": None, "wednesday": None, "thursday": None, "friday": None, "saturday": None, "sunday": None}
-        self.location_data["reviews"] = []
-        self.location_data["popular_times"] = {"monday": [], "tuesday": [], "Wednesday": [], "thursday": [], "friday": [], "saturday": [], "sunday": []}
+        self.location_data = {
+            "id": None,
+            "name": None,
+            "telephone": None,
+            "address": None,
+            "website": None,
+            "time": {"monday": None, "tuesday": None, "wednesday": None, "thursday": None, "friday": None, "saturday": None, "sunday": None},
+            "popular_times": {"monday": [], "tuesday": [], "Wednesday": [], "thursday": [], "friday": [], "saturday": [], "sunday": []},
+            "reviews": [],
+            "rating": {
+                "aggregate": None,
+                "total": None,
+            },
+        }
 
     def clickOpenCloseTime(self):
         if(len(list(self.browser.find_elements_by_class_name("LJKBpe-Tswv1b-hour-text"))) != 0):
@@ -71,10 +77,11 @@ class Googlemaps:
         try:
             avg_rating = self.browser.find_element_by_class_name("section-star-array").get_attribute("aria-label")
         except Exception as e:
+            avg_rating = self.browser.find_element_by_css_selector("ol[aria-label$='stars']").get_attribute("aria-label")
             pass
 
         try:
-            total_reviews = int(self.browser.find_element_by_css_selector("[aria-label$='reviews']").text.replace(' reviews', ''))
+            total_reviews = int(self.browser.find_element_by_css_selector("[aria-label$='reviews']").text.replace(' reviews', '').replace(',', ''))
         except Exception as e:
             pass
 
@@ -94,11 +101,18 @@ class Googlemaps:
             pass
 
         try:
-            self.location_data["rating"] = str(avg_rating).replace('stars', '').strip()
-            self.location_data["reviews_count"] = total_reviews
-            self.location_data["location"] = address.text
-            self.location_data["contact"] = phone_number.text
-            self.location_data["website"] = website.text
+            self.location_data = {
+                "id": 0,
+                "name": None,
+                "telephone": phone_number.text,
+                "address": address.text,
+                "website": website.text,
+                "reviews": [],
+                "rating": {
+                    "aggregate": float(str(avg_rating).replace('stars', '').strip()),
+                    "total": total_reviews,
+                },
+            }
         except Exception as e:
             print(e)
             pass
@@ -116,16 +130,30 @@ class Googlemaps:
     def loadAllReviews(self):
         try:
             self.clickAllReviewsButton()
-            totalReviewsCount = self.location_data["reviews_count"]
+            totalReviewsCount = self.location_data["rating"]['total']
+
+            retryCntr = 0
+            lastLoadedReviewCount = 0
 
             currentlyLoadedReviews = self.getReviewElements()
-            currentlyLoadedReviewsCnt = len(list(currentlyLoadedReviews))
+            lastLoadedReviewCount = currentlyLoadedReviewsCnt = len(list(currentlyLoadedReviews))
             while len(list(currentlyLoadedReviews)) <= totalReviewsCount:
-                lastLoadedReviewElement = currentlyLoadedReviews[-1]
-                self.browser.execute_script('arguments[0].scrollIntoView(true)', lastLoadedReviewElement)
-                time.sleep(2)
 
-                currentlyLoadedReviews = self.getReviewElements()
+                if retryCntr < 3:
+                    lastLoadedReviewElement = currentlyLoadedReviews[-1]
+                    self.browser.execute_script('arguments[0].scrollIntoView(true)', lastLoadedReviewElement)
+                    time.sleep(2)
+
+                    currentlyLoadedReviews = self.getReviewElements()
+                    currentlyLoadedReviewsCnt = len(list(currentlyLoadedReviews))
+
+                    if currentlyLoadedReviewsCnt <= lastLoadedReviewCount:
+                        retryCntr += 1
+                    else:
+                        lastLoadedReviewCount = currentlyLoadedReviewsCnt
+                else:
+                    break
+
         except Exception as e:
             print(e)
             pass
@@ -195,9 +223,12 @@ class Googlemaps:
                                 reviewerTotalReviews = int(reviewerTotalReviewsStr.split(' ')[0])
 
                                 finaReview = {}
+                                finaReview['review_id'] = 0
+                                finaReview['user_id'] = 0
                                 finaReview['name'] = reviewDetailsArr[0]
                                 finaReview['level'] = reviewerLevel
                                 finaReview['total_reviews'] = reviewerTotalReviews
+                                finaReview["date"] = None
                                 finaReview['review'] = None
 
                                 if len(reviewDetailsArr) == 3:
@@ -210,15 +241,35 @@ class Googlemaps:
                                 html_content = review.get_attribute('innerHTML')
                                 self.browserReviews.get("data:text/html;charset=utf-8,{html_content}".format(html_content=html_content))
 
+                                try:
+                                    reviewerUrl = self.browserReviews.find_element_by_css_selector("a[aria-label^=' Photo of']").get_attribute("href").strip()
+                                    reviewerUrl = reviewerUrl.replace('https://www.google.com/maps/contrib/', '')
+                                    finaReview['user_id'] = int(reviewerUrl.split('/')[0])
+                                except Exception as e:
+                                    pass
+
+                                try:
+                                    reviewId = self.browserReviews.find_element_by_css_selector("button[aria-label^=' Review actions']").get_attribute("data-review-id").strip()
+                                    finaReview['review_id'] = reviewId
+                                except Exception as e:
+                                    pass
+
                                 reviewRating = 0
                                 try:
                                     reviewRatingStr = self.browserReviews.find_element_by_css_selector("span[aria-label$='stars ']").get_attribute("aria-label").strip()
                                     reviewRatingArr = reviewRatingStr.split(' ')
                                     reviewRating = int(reviewRatingArr[0].strip())
+
                                 except Exception as e:
                                     reviewRatingStr = self.browserReviews.find_element_by_css_selector("span[aria-label$='star ']").get_attribute("aria-label").strip()
                                     reviewRatingArr = reviewRatingStr.split(' ')
                                     reviewRating = int(reviewRatingArr[0].strip())
+                                    pass
+
+                                try:
+                                    reviewDate = self.browserReviews.find_element_by_css_selector("span[class$='-date']").text.strip()
+                                    finaReview['date'] = reviewDate
+                                except Exception as e:
                                     pass
 
                                 finaReview['rating'] = reviewRating
@@ -239,6 +290,7 @@ class Googlemaps:
 
         self.clickOpenCloseTime()
         self.getLocationOpenCloseTime()
+        time.sleep(2)
         self.getLocationData()
         self.getPopularTimes()
         self.loadAllReviews()
