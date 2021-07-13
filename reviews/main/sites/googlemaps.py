@@ -25,6 +25,7 @@ class Googlemaps:
     def __init__(self, debug=False):
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
+        self.options.add_argument('--no-sandbox')
         self.options.headless = True
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
         self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
