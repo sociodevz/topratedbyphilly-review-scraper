@@ -1,5 +1,5 @@
 [Unit]
-Description=TopRatedByPhilly Review Scraper
+Description=Gunicorn TopRatedByPhilly Review Scraper API
 After=network.target
 
 [Service]
