@@ -54,7 +54,7 @@ class Bbb:
             "name": jsonStr['name'],
             "telephone": jsonStr['telephone'],
             "address": jsonStr['address'],
-            "reviews": self.fetchReviews(self.generateReviewUrl(), self.extractTotalReviews()),
+            #"reviews": self.fetchReviews(self.generateReviewUrl(), self.extractTotalReviews()),
             "rating": {
                 "aggregate": self.extractAggregateReviewRating(),
                 "total": self.extractTotalReviews(),
@@ -94,7 +94,7 @@ class Bbb:
     def extractAggregateReviewRating(self):
         result = 0
 
-        pattern = r"</div><span class=\"MuiTypography-root.*?<strong>([0-9])</strong>/5"
+        pattern = r"</div><span class=\"MuiTypography-root.*?<strong>(.*?)</strong>/5"
         matches = re.findall(pattern, self.scrapedRawData, re.MULTILINE)
 
         if len(matches) > 0:
