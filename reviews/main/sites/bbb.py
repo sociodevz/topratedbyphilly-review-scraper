@@ -54,7 +54,7 @@ class Bbb:
             "name": jsonStr['name'],
             "telephone": jsonStr['telephone'],
             "address": jsonStr['address'],
-            #"reviews": self.fetchReviews(self.generateReviewUrl(), self.extractTotalReviews()),
+            "reviews": self.fetchReviews(self.generateReviewUrl(), self.extractTotalReviews()),
             "rating": {
                 "aggregate": self.extractAggregateReviewRating(),
                 "total": self.extractTotalReviews(),
