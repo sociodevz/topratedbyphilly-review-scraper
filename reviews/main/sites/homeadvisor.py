@@ -53,7 +53,7 @@ class Homeadvisor:
 
         if self.scrapedRawData is not None:
             result = self.processRawData()
-            returnArr.append(result)
+            returnArr = result
 
         return returnArr
 

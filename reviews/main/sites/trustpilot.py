@@ -42,8 +42,9 @@ class Trustpilot:
             file = open(f"{filePath}/sample_data/{url}")
             self.scrapedRawData = file.read()
 
-        result = self.processRawData()
-        returnArr.append(result)
+        if self.scrapedRawData is not None:
+            result = self.processRawData()
+            returnArr = result
 
         return returnArr
 
