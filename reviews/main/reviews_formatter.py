@@ -1,4 +1,6 @@
+import dateparser
 from datetime import datetime
+from reviews.common.functions import convertStringDate2Date
 
 class ReviewFormatter:
     platform = None
@@ -57,7 +59,7 @@ class ReviewFormatter:
 
         result["review"]["rating"] = reviewObj["rating"]
         result["review"]["text"] = reviewObj["review"]
-        result["date"] = reviewObj["date"]
+        result["date"] = convertStringDate2Date(reviewObj["date"])
 
         return result
 
@@ -73,7 +75,7 @@ class ReviewFormatter:
         result["review"]["rating"] = reviewObj["reviewStarRating"]
         if len(reviewObj["extendedText"]) > 0:
             result["review"]["text"] = reviewObj["extendedText"][0]["text"]
-        result["date"] = f"{reviewObj['date']['year']}-{reviewObj['date']['month']}-{reviewObj['date']['day']}"
+        result["date"] = dateparser.parse(f"{reviewObj['date']['year']}-{reviewObj['date']['month']}-{reviewObj['date']['day']}").isoformat()
 
         return result
 
@@ -88,7 +90,7 @@ class ReviewFormatter:
 
         result["review"]["rating"] = reviewObj["rating"]
         result["review"]["text"] = reviewObj["comment"]["text"]
-        result["date"] = reviewObj['localizedDate']
+        result["date"] = dateparser.parse(reviewObj['localizedDate']).isoformat()
 
         result["dump"] = reviewObj
 
@@ -145,7 +147,7 @@ class ReviewFormatter:
 
         result["review"]["rating"] = int(reviewObj["reviewRating"]["ratingValue"])
         result["review"]["text"] = reviewObj["reviewBody"]
-        result["date"] = reviewObj['datePublished']
+        result["date"] = dateparser.parse(reviewObj['datePublished']).isoformat()
 
         result["misc"] = {
             "review": {
