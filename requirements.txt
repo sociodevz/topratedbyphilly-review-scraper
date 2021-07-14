@@ -1,6 +1,8 @@
+wheel
 requests
 argparse
 brotli
 selenium
 flask
 gunicorn
+dateparser
