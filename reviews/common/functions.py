@@ -38,3 +38,14 @@ def fixLocalBusinessJSON(jsonObj):
 
     return jsonObj
 
+
+def reviewsCleanup(self, reviewJSON):
+    result = reviewJSON
+
+    result = result.replace(',"@type":"Person"', '')
+    result = result.replace(',"@type":"Review"', '')
+    result = result.replace(',"@type":"Rating"', '')
+    result = result.replace(',"@type":"Thing"', '')
+    result = result.replace(',"@type":"PostalAddress"', '')
+
+    return result
