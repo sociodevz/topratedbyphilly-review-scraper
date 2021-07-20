@@ -9,7 +9,8 @@ class Network:
     def fetch(url, headersArr):
         returnArr = {"code": 0}
         try:
-            if len(headersArr) == 0:
+            if headersArr is None or len(headersArr) == 0:
+                headersArr = {}
                 useragent = UserAgent()
                 headersArr.update(useragent.getRandom())
 
