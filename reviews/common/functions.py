@@ -27,3 +27,14 @@ def convertStringDate2Date(dateStr):
         pass
 
     return result
+
+
+def fixLocalBusinessJSON(jsonObj):
+    if 'aggregateRating' not in jsonObj:
+        jsonObj['aggregateRating'] = {
+            'ratingValue': 0,
+            'reviewCount': 0
+        }
+
+    return jsonObj
+

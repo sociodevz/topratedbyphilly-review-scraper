@@ -12,6 +12,7 @@ from time import sleep
 from reviews.common.network import Network
 from reviews.common.config import config
 from reviews.main.reviews_formatter import ReviewFormatter
+from reviews.common.functions import *
 
 class Houzz:
 
@@ -72,6 +73,7 @@ class Houzz:
 
     def processRawData(self):
         jsonStr = self.extractJSON()
+        jsonStr = fixLocalBusinessJSON(jsonStr)
 
         return {
             "id": jsonStr['@id'],
