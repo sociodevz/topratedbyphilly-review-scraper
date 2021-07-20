@@ -5,6 +5,7 @@ from reviews.main.sites.houzz import Houzz
 from reviews.main.sites.homeadvisor import Homeadvisor
 from reviews.main.sites.googlemaps import Googlemaps
 from reviews.main.sites.buildzoom import Buildzoom
+from reviews.main.sites.angi import Angi
 
 import requests
 import sys

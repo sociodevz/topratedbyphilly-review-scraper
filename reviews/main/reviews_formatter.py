@@ -24,6 +24,8 @@ class ReviewFormatter:
             result = self._formatTrustPilotReview(reviewObj)
         elif self.platform == "buildzoom":
             result = self._formatBuildzoomReview(reviewObj)
+        elif self.platform == "angi":
+            result = self._formatAngiReview(reviewObj)
 
         return result
 
@@ -185,6 +187,34 @@ class ReviewFormatter:
         result["misc"] = {
             "review": {
                 "response": reviewObj["reviewResponse"]
+            }
+        }
+
+        result["dump"] = reviewObj
+
+        return result
+
+
+    def _formatAngiReview(self, reviewObj):
+        result = self._getTemplate()
+
+        result["id"] = reviewObj["id"]
+        result["user"]["id"] = 0
+        result["user"]["name"] = 'Anonymous'
+        result["user"]["level"] = None
+        result["user"]["reviews"]["total"] = None
+
+        result["review"]["rating"] = int(reviewObj["ratings"][0]["starRating"])
+        result["review"]["text"] = reviewObj["reviewText"]
+        result["date"] = dateparser.parse(reviewObj['reportDate']).isoformat()
+
+        businessResponse = None
+        if 'retort' in reviewObj:
+            businessResponse = reviewObj['retort']['text']
+
+        result["misc"] = {
+            "review": {
+                "response": businessResponse
             }
         }
 
