@@ -102,7 +102,7 @@ class Buildzoom:
                 if contactOuterObj is not None:
                     contactInnerObj = contactOuterObj.find("a")
                     if contactInnerObj is not None:
-                        result['telephone'] = contactInnerObj.text
+                        result['telephone'] = contactInnerObj.text.strip()
 
         except Exception as e:
             error = e
