@@ -140,7 +140,7 @@ class Houzz:
 
         reviewFormatter = ReviewFormatter('houzz')
         for i in range(math.ceil(int(totalReviews/45))+1):
-            reviewUrl = reviewBaseUrl.replace("ITEM_NUMBER", str(i+1))
+            reviewUrl = reviewBaseUrl.replace("ITEM_NUMBER", str(i))
             scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
             if(scrapedRawData['code'] == 200):
                 reviewsRawData = json.loads(scrapedRawData['body'])
