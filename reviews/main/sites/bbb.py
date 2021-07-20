@@ -75,7 +75,7 @@ class Bbb:
         result = None
 
         try:
-            result = self.siteUrl.split('-')[-1]
+            result = int(self.siteUrl.split('-')[-1])
         except Exception as e:
             pass
 
