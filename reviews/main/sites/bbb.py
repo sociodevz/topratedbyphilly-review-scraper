@@ -9,6 +9,7 @@ from time import sleep
 from reviews.common.network import Network
 from reviews.common.config import config
 from reviews.main.reviews_formatter import ReviewFormatter
+from reviews.common.functions import *
 
 class Bbb:
 
@@ -48,6 +49,7 @@ class Bbb:
 
     def processRawData(self):
         jsonStr = self.extractJSON()
+        jsonStr = fixLocalBusinessJSON(jsonStr)
 
         return {
             "id": self.extractBusinessId(),
