@@ -4,6 +4,7 @@ from reviews.main.sites.trustpilot import Trustpilot
 from reviews.main.sites.houzz import Houzz
 from reviews.main.sites.homeadvisor import Homeadvisor
 from reviews.main.sites.googlemaps import Googlemaps
+from reviews.main.sites.buildzoom import Buildzoom
 
 import requests
 import sys

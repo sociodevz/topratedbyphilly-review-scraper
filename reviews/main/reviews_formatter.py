@@ -22,7 +22,8 @@ class ReviewFormatter:
             result = self._formatHouzzReview(reviewObj)
         elif self.platform == "trustpilot":
             result = self._formatTrustPilotReview(reviewObj)
-
+        elif self.platform == "buildzoom":
+            result = self._formatBuildzoomReview(reviewObj)
 
         return result
 
@@ -160,6 +161,30 @@ class ReviewFormatter:
         result["misc"] = {
             "review": {
                 "headline": reviewObj["headline"]
+            }
+        }
+
+        result["dump"] = reviewObj
+
+        return result
+
+
+    def _formatBuildzoomReview(self, reviewObj):
+        result = self._getTemplate()
+
+        result["id"] = reviewObj["id"]
+        result["user"]["id"] = 0
+        result["user"]["name"] = reviewObj["author"]["name"]
+        result["user"]["level"] = None
+        result["user"]["reviews"]["total"] = None
+
+        result["review"]["rating"] = int(reviewObj["reviewRating"]["ratingValue"])
+        result["review"]["text"] = reviewObj["reviewBody"]
+        result["date"] = dateparser.parse(reviewObj['datePublished']).isoformat()
+
+        result["misc"] = {
+            "review": {
+                "response": reviewObj["reviewResponse"]
             }
         }
 
