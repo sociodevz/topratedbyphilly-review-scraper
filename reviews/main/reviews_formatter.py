@@ -66,16 +66,22 @@ class ReviewFormatter:
     def _formatBbbReview(self, reviewObj):
         result = self._getTemplate()
 
-        result["id"] = reviewObj["id"]
-        result["user"]["id"] = 0
-        result["user"]["name"] = reviewObj["displayName"]
-        result["user"]["level"] = None
-        result["user"]["reviews"]["total"] = -1
+        try:
+            result["id"] = reviewObj["id"]
+            result["user"]["id"] = 0
+            result["user"]["name"] = reviewObj["displayName"]
+            result["user"]["level"] = None
+            result["user"]["reviews"]["total"] = -1
 
-        result["review"]["rating"] = reviewObj["reviewStarRating"]
-        if len(reviewObj["extendedText"]) > 0:
-            result["review"]["text"] = reviewObj["extendedText"][0]["text"]
-        result["date"] = dateparser.parse(f"{reviewObj['date']['year']}-{reviewObj['date']['month']}-{reviewObj['date']['day']}").isoformat()
+            result["review"]["rating"] = reviewObj["reviewStarRating"]
+            if reviewObj['hasExtendedText'] is True:
+                result["review"]["text"] = reviewObj["extendedText"]["text"]
+            else:
+                result["review"]["text"] = reviewObj["text"]
+            result["date"] = dateparser.parse(f"{reviewObj['date']['year']}-{reviewObj['date']['month']}-{reviewObj['date']['day']}").isoformat()
+        except Exception as e:
+            error = e
+            pass
 
         return result
 
