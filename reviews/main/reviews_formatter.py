@@ -79,6 +79,8 @@ class ReviewFormatter:
             else:
                 result["review"]["text"] = reviewObj["text"]
             result["date"] = dateparser.parse(f"{reviewObj['date']['year']}-{reviewObj['date']['month']}-{reviewObj['date']['day']}").isoformat()
+
+            result["dump"] = reviewObj
         except Exception as e:
             error = e
             pass
