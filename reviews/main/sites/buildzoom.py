@@ -14,6 +14,7 @@ from reviews.common.config import config
 from reviews.main.reviews_formatter import ReviewFormatter
 from reviews.common.functions import *
 
+
 class Buildzoom:
 
     siteUrl = None
@@ -97,6 +98,12 @@ class Buildzoom:
                     subTag = tag.find("span", attrs={"class": "contractor-rating-review-count"})
                     result['aggregateRating']['reviewCount'] = int(subTag.text)
 
+                contactOuterObj = soup.find("div", attrs={"itemprop": "telephone"})
+                if contactOuterObj is not None:
+                    contactInnerObj = contactOuterObj.find("a")
+                    if contactInnerObj is not None:
+                        result['telephone'] = contactInnerObj.text
+
         except Exception as e:
             error = e
             pass
@@ -116,7 +123,7 @@ class Buildzoom:
                     reviewObj = {}
                     reviewObj["id"] = int(review['data-review-id'])
 
-                    #reviewer
+                    # reviewer
                     reviewerNameOuterObj = review.find("span", attrs={"itemprop": "author"})
                     reviewerNameInnerObj = reviewerNameOuterObj.find("span", attrs={"itemprop": "name"})
                     reviewerName = "Anonymous"
@@ -124,33 +131,33 @@ class Buildzoom:
                         reviewerName = reviewerNameInnerObj.text
                     reviewObj["author"] = {"name": reviewerName}
 
-                    #published date
+                    # published date
                     reviewDateOuterObj = review.find("div", attrs={"class": "review-date"})
                     reviewDateInnerObj = reviewDateOuterObj.find("meta", attrs={"itemprop": "datePublished"})
                     reviewObj['datePublished'] = reviewDateInnerObj['content']
 
-                    #main review block
+                    # main review block
                     userReviewOuterObj = review.find("div", attrs={"class": "userreview"})
 
-                    #job type
-                    #reviewHeadlineObj = review.find("div", attrs={"class": "header-subject"})
-                    #reviewObj["headline"] = reviewHeadlineObj.text
+                    # job type
+                    # reviewHeadlineObj = review.find("div", attrs={"class": "header-subject"})
+                    # reviewObj["headline"] = reviewHeadlineObj.text
 
-                    #rating
+                    # rating
                     userRatingInnerObj = userReviewOuterObj.find("meta", attrs={"itemprop": "ratingValue"})
                     reviewObj["reviewRating"] = {"ratingValue": userRatingInnerObj['content']}
 
-                    #actual review text
+                    # actual review text
                     reviewBodyOuterObj = review.find("span", attrs={"itemprop": "reviewBody"})
                     reviewBodyInnerObj = reviewBodyOuterObj.find("p")
                     reviewObj["reviewBody"] = reviewBodyInnerObj.text
 
-                    #actual review text
+                    # actual review text
                     reviewBodyOuterObj = review.find("span", attrs={"itemprop": "reviewBody"})
                     reviewBodyInnerObj = reviewBodyOuterObj.find("p")
                     reviewObj["reviewBody"] = reviewBodyInnerObj.text
 
-                    #owner response
+                    # owner response
                     reviewObj["reviewResponse"] = None
                     businessResponseObj = review.find("div", attrs={"class": "review-response-content"})
                     if businessResponseObj is not None:
