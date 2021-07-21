@@ -226,7 +226,7 @@ class ReviewFormatter:
 
             result["review"]["rating"] = self.reviewObj["reviewRating"]["ratingValue"]
             result["review"]["text"] = self.reviewObj["reviewBody"]
-            result["date"] = dateparser.parse(self.reviewObj['reportDate']).isoformat()
+            result["date"] = dateparser.parse(self.reviewObj['datePublished']).isoformat()
 
             businessResponse = None
             if 'retort' in self.reviewObj:
