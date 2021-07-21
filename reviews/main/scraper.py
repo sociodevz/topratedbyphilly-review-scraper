@@ -6,6 +6,7 @@ from reviews.main.sites.homeadvisor import Homeadvisor
 from reviews.main.sites.googlemaps import Googlemaps
 from reviews.main.sites.buildzoom import Buildzoom
 from reviews.main.sites.angi import Angi
+from reviews.main.sites.gaf import Gaf
 
 import requests
 import sys
