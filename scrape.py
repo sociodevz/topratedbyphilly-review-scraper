@@ -6,8 +6,9 @@ from reviews.common.config import config, updateConfigFromArgs
 
 import requests
 
+scraperSites = config.get('scraper_sites')
 parser = ArgumentParser()
-parser.add_argument('-engine', type=str, required=True, help='Scraping Engine [yelp,bbb,trustpilot,houzz,googlemaps,buildzoom,angi]')
+parser.add_argument('-engine', type=str, required=True, help=f"Scraping Engine [{scraperSites}]")
 parser.add_argument('-url', type=str, required=True, help='Website url to crawl')
 args = parser.parse_args()
 
