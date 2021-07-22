@@ -7,6 +7,7 @@ from reviews.main.sites.googlemaps import Googlemaps
 from reviews.main.sites.buildzoom import Buildzoom
 from reviews.main.sites.angi import Angi
 from reviews.main.sites.gaf import Gaf
+from reviews.main.sites.bestpickreports import Bestpickreports
 
 import requests
 import sys
