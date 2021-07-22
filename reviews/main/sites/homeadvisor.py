@@ -17,13 +17,15 @@ from reviews.common.functions import *
 
 class Homeadvisor:
 
+    platformName = None
     siteUrl = None
     scrapedRawData = None
-    scrapedRawReviewsData = None
     siteHeaders = None
+    siteId = None
 
     def __init__(self):
-        print('Initalized Homeadvisor Engine')
+        self.platformName = self.__class__.__name__
+        print(f'Initalized {self.platformName} Engine')
         pass
 
     def scrapeURL(self, url):
@@ -58,48 +60,31 @@ class Homeadvisor:
 
         return returnArr
 
-    def scrapeReviews(self, siteUrl, reviewUrl):
-        headersArr = {}
-
-        userAgent = UserAgent()
-        userAgentList = userAgent.getRandom()
-        headersArr.update(userAgentList)
-        headersArr.update({
-            'referer': siteUrl,
-            'x-requested-with': 'XMLHttpRequest',
-        })
-
-        scrapedRawData = Network.fetch(reviewUrl, headersArr)
-        if(scrapedRawData['code'] == 200):
-            self.scrapedRawReviewsData = scrapedRawData['body']
-            print()
-
     def processRawData(self):
         jsonStr = self.extractJSON()['@graph'][1]
         jsonStr = fixLocalBusinessJSON(jsonStr)
 
+        self.siteUrl = jsonStr['@id']
+        self.extractId()
+
         return {
-            "id": self.extractId(jsonStr['@id']),
+            "id": self.siteId,
             "name": jsonStr['name'],
             "telephone": jsonStr['telephone'],
             "address": jsonStr['address'],
-            "reviews": self.fetchReviews(self.generateReviewUrl(self.extractId(jsonStr['@id'])), jsonStr['aggregateRating']['reviewCount']),
+            "reviews": self.fetchReviews(self.generateReviewUrl(), jsonStr['aggregateRating']['reviewCount']),
             "rating": {
                 "aggregate": jsonStr['aggregateRating']['ratingValue'],
                 "total": jsonStr['aggregateRating']['reviewCount'],
             },
         }
 
-    def extractId(self, dataStr):
-        result = None
-
+    def extractId(self):
         pattern = r"rated\..*?\.(.*?)\.html"
-        matches = re.findall(pattern, dataStr, re.MULTILINE)
+        matches = re.findall(pattern, self.siteUrl, re.MULTILINE)
 
         if len(matches) > 0:
-            result = int(matches[0].strip())
-
-        return result
+            self.siteId = int(matches[0].strip())
 
     def extractName(self):
         result = None
@@ -123,8 +108,8 @@ class Homeadvisor:
 
         return result
 
-    def generateReviewUrl(self, businessId):
-        result = f"https://www.homeadvisor.com/sm/reviews/{businessId}?page=PAGE_NUMBER&sort=newest&pageSize=10"
+    def generateReviewUrl(self):
+        result = f"https://www.homeadvisor.com/sm/reviews/{self.siteId}?page=PAGE_NUMBER&sort=newest&pageSize=10"
 
         return result
 
@@ -142,7 +127,7 @@ class Homeadvisor:
     def fetchReviews(self, reviewBaseUrl, totalReviews):
         result = []
 
-        reviewFormatter = ReviewFormatter('homeadvisor')
+        reviewFormatter = ReviewFormatter(self.platformName)
         for i in range(math.ceil(int(totalReviews/10))+1):
             reviewUrl = reviewBaseUrl.replace("PAGE_NUMBER", str(i+1))
             scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
