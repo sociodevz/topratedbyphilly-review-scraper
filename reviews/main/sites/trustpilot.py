@@ -15,12 +15,15 @@ from reviews.common.functions import *
 
 class Trustpilot:
 
+    platformName = None
     siteUrl = None
     scrapedRawData = None
     siteHeaders = None
+    siteId = None
 
     def __init__(self):
-        print('Initalized TrustPilot Engine')
+        self.platformName = self.__class__.__name__
+        print(f'Initalized {self.platformName} Engine')
         pass
 
     def scrapeURL(self, url):
@@ -100,7 +103,7 @@ class Trustpilot:
     def fetchReviews(self,  currentReviews, reviewBaseUrl):
         result = []
 
-        reviewFormatter = ReviewFormatter('trustpilot')
+        reviewFormatter = ReviewFormatter(self.platformName)
 
         if len(currentReviews) > 0:
             for review in currentReviews:

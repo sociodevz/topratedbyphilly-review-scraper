@@ -17,13 +17,15 @@ from reviews.common.functions import *
 
 class Angi:
 
+    platformName = None
     siteUrl = None
     scrapedRawData = None
     siteHeaders = None
     siteId = None
 
     def __init__(self):
-        print('Initalized Angi Engine')
+        self.platformName = self.__class__.__name__
+        print(f'Initalized {self.platformName} Engine')
         pass
 
     def scrapeURL(self, url):
@@ -96,7 +98,7 @@ class Angi:
         result = []
 
         try:
-            reviewFormatter = ReviewFormatter('angi')
+            reviewFormatter = ReviewFormatter(self.platformName)
 
             soup = BeautifulSoup(self.scrapedRawData, 'lxml')
             if soup is not None:

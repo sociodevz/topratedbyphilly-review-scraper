@@ -20,7 +20,6 @@ class Homeadvisor:
     platformName = None
     siteUrl = None
     scrapedRawData = None
-    scrapedRawReviewsData = None
     siteHeaders = None
     siteId = None
 
@@ -60,22 +59,6 @@ class Homeadvisor:
             returnArr = result
 
         return returnArr
-
-    def scrapeReviews(self, siteUrl, reviewUrl):
-        headersArr = {}
-
-        userAgent = UserAgent()
-        userAgentList = userAgent.getRandom()
-        headersArr.update(userAgentList)
-        headersArr.update({
-            'referer': siteUrl,
-            'x-requested-with': 'XMLHttpRequest',
-        })
-
-        scrapedRawData = Network.fetch(reviewUrl, headersArr)
-        if(scrapedRawData['code'] == 200):
-            self.scrapedRawReviewsData = scrapedRawData['body']
-            print()
 
     def processRawData(self):
         jsonStr = self.extractJSON()['@graph'][1]

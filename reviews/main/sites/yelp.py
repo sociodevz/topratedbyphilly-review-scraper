@@ -14,12 +14,15 @@ from reviews.common.functions import *
 
 class Yelp:
 
+    platformName = None
     siteUrl = None
     scrapedRawData = None
     siteHeaders = None
+    siteId = None
 
     def __init__(self):
-        print('Initalized Yelp Engine')
+        self.platformName = self.__class__.__name__
+        print(f'Initalized {self.platformName} Engine')
         pass
 
     def scrapeURL(self, url):
@@ -100,7 +103,7 @@ class Yelp:
     def fetchReviews(self, reviewBaseUrl, totalReviews):
         result = []
 
-        reviewFormatter = ReviewFormatter('yelp')
+        reviewFormatter = ReviewFormatter(self.platformName)
         for i in range(math.ceil(int(totalReviews/10))+1):
             if i < 1:
                 appendPage = ''

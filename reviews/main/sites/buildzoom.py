@@ -17,12 +17,15 @@ from reviews.common.functions import *
 
 class Buildzoom:
 
+    platformName = None
     siteUrl = None
     scrapedRawData = None
     siteHeaders = None
+    siteId = None
 
     def __init__(self):
-        print('Initalized Buildzoom Engine')
+        self.platformName = self.__class__.__name__
+        print(f'Initalized {self.platformName} Engine')
         pass
 
     def scrapeURL(self, url):
@@ -114,7 +117,7 @@ class Buildzoom:
         result = []
 
         try:
-            reviewFormatter = ReviewFormatter('buildzoom')
+            reviewFormatter = ReviewFormatter(self.platformName)
 
             soup = BeautifulSoup(self.scrapedRawData, 'lxml')
             if soup is not None:

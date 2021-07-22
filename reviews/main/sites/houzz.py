@@ -16,13 +16,15 @@ from reviews.common.functions import *
 
 class Houzz:
 
+    platformName = None
     siteUrl = None
     scrapedRawData = None
-    scrapedRawReviewsData = None
     siteHeaders = None
+    siteId = None
 
     def __init__(self):
-        print('Initalized Houzz Engine')
+        self.platformName = self.__class__.__name__
+        print(f'Initalized {self.platformName} Engine')
         pass
 
     def scrapeURL(self, url):
@@ -54,22 +56,6 @@ class Houzz:
             returnArr = result
 
         return returnArr
-
-    def scrapeReviews(self, siteUrl, reviewUrl):
-        headersArr = {}
-
-        userAgent = UserAgent()
-        userAgentList = userAgent.getRandom()
-        headersArr.update(userAgentList)
-        headersArr.update({
-            'referer': siteUrl,
-            'x-requested-with': 'XMLHttpRequest',
-        })
-
-        scrapedRawData = Network.fetch(reviewUrl, headersArr)
-        if(scrapedRawData['code'] == 200):
-            self.scrapedRawReviewsData = scrapedRawData['body']
-            print()
 
     def processRawData(self):
         jsonStr = self.extractJSON()
@@ -119,17 +105,6 @@ class Houzz:
 
         return result
 
-    def extractCSRF(self, cookieStr):
-        result = None
-
-        pattern = r"_csrf=(.*?);"
-        matches = re.findall(pattern, cookieStr, re.MULTILINE)
-
-        if len(matches) > 0:
-            result = matches[0].strip()
-
-        return result
-
     def fetchReviews(self, reviewBaseUrl, totalReviews):
         result = []
 
@@ -138,7 +113,7 @@ class Houzz:
             'x-requested-with': 'XMLHttpRequest',
         })
 
-        reviewFormatter = ReviewFormatter('houzz')
+        reviewFormatter = ReviewFormatter(self.platformName)
         for i in range(math.ceil(int(totalReviews/45))+1):
             reviewUrl = reviewBaseUrl.replace("ITEM_NUMBER", str(i))
             scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
