@@ -244,3 +244,27 @@ class ReviewFormatter:
             pass
 
         return result
+
+    def _formatBestpickreportsReview(self):
+        result = self._getTemplate()
+
+        try:
+            result["id"] = self.reviewObj["id"]
+            result["user"]["id"] = 0
+            result["user"]["name"] = self.reviewObj['author']['name']
+            result["user"]["level"] = None
+            result["user"]["reviews"]["total"] = None
+
+            result["review"]["rating"] = self.reviewObj["reviewRating"]["ratingValue"]
+            result["review"]["text"] = self.reviewObj["reviewBody"]
+            result["date"] = dateparser.parse(self.reviewObj['datePublished']).isoformat()
+
+            result["misc"] = {
+            }
+
+            result["dump"] = self.reviewObj
+        except Exception as e:
+            error = e
+            pass
+
+        return result
