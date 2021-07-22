@@ -3,7 +3,7 @@ config = {
     'scraper_mode': 'online',
     'proxy_url_ip': 'http://zxkewixn-rotate:uoqs3rcgh2ph@p.webshare.io:80',
     'proxy_enabled': True,
-    'scraper_sites': 'yelp,bbb,trustpilot,houzz,googlemaps,buildzoom,angi,gaf'
+    'scraper_sites': 'yelp,bbb,trustpilot,houzz,googlemaps,buildzoom,angi,gaf,bestpickreports'
 }
 
 def updateConfigFromArgs(args):
