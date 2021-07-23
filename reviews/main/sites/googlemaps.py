@@ -257,18 +257,19 @@ class Googlemaps:
                     reviewerDetailsOuterObj = review.find("a", attrs={"href": re.compile('^https://www.google.com/maps/contrib/')})
                     if reviewerDetailsOuterObj is not None:
                         reviewerDetailsInnerObj = review.find("div", attrs={"class": re.compile('.*VdSJob')})
-                        spansObj = reviewerDetailsInnerObj.findChildren("span", recursive=False)
-                        spansArr = ["level", "total_reviews"]
-                        for cntr, spanObj in enumerate(spansObj):
-                            if cntr == 0:
-                                finaReview['level'] = spanObj.text.strip().replace(' reviews', '').replace(' review', '').replace('\u30fb19', '')
-                            elif cntr == 1:
-                                totalReviewsText = spanObj.text.replace('\u30fb19', '')
-                                totalReviewsText = spanObj.text.replace('・', '')
-                                totalReviewsText = totalReviewsText.replace(' reviews', '')
-                                totalReviewsText = totalReviewsText.replace(' review', '')
-                                totalReviewsText = int(totalReviewsText.strip())
-                                finaReview['total_reviews'] = totalReviewsText
+                        if reviewerDetailsInnerObj is not None:
+                            spansObj = reviewerDetailsInnerObj.findChildren("span", recursive=False)
+                            spansArr = ["level", "total_reviews"]
+                            for cntr, spanObj in enumerate(spansObj):
+                                if cntr == 0:
+                                    finaReview['level'] = spanObj.text.strip().replace(' reviews', '').replace(' review', '').replace('\u30fb19', '')
+                                elif cntr == 1:
+                                    totalReviewsText = spanObj.text.replace('\u30fb19', '')
+                                    totalReviewsText = spanObj.text.replace('・', '')
+                                    totalReviewsText = totalReviewsText.replace(' reviews', '')
+                                    totalReviewsText = totalReviewsText.replace(' review', '')
+                                    totalReviewsText = int(totalReviewsText.strip())
+                                    finaReview['total_reviews'] = totalReviewsText
 
                     # reviewer rating
                     reviewerRatingObj = review.find("span", attrs={"aria-label": re.compile('.*star.*')})
