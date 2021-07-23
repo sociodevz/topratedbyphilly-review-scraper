@@ -27,17 +27,31 @@ class ReviewFormatter:
             "user": {
                 "id": None,
                 "name": None,
-                "level": None,
-                "reviews": {
-                    "total": 0
-                },
             },
             "review": {
                 "rating": None,
                 "text": None,
             },
             "date": None,
-            "misc": {},
+            "misc": {
+                "user": {
+                    "pic": None,
+                    "level": None,
+                    "city": None,
+                    "state": None,
+                    "zip": None,
+                    "reviews": {
+                        "total": -1
+                    }
+                },
+                "review": {
+                    "headline": None,
+                    "business_response": {
+                        "date": None,
+                        "text": None,
+                    }
+                },
+            },
             "dump": {}
         }
 
@@ -46,15 +60,25 @@ class ReviewFormatter:
     def _formatGooglemapsReview(self):
         result = self._getTemplate()
 
-        result["id"] = self.reviewObj["review_id"]
-        result["user"]["id"] = self.reviewObj["user_id"]
-        result["user"]["name"] = self.reviewObj["name"]
-        result["user"]["level"] = self.reviewObj["level"]
-        result["user"]["reviews"]["total"] = self.reviewObj["total_reviews"]
+        try:
+            result["id"] = self.reviewObj["review_id"]
+            result["user"]["id"] = self.reviewObj["user_id"]
+            result["user"]["name"] = self.reviewObj["name"]
+            result["review"]["rating"] = self.reviewObj["rating"]
+            result["review"]["text"] = self.reviewObj["review"]
+            result["date"] = convertStringDate2Date(self.reviewObj["date"])
 
-        result["review"]["rating"] = self.reviewObj["rating"]
-        result["review"]["text"] = self.reviewObj["review"]
-        result["date"] = convertStringDate2Date(self.reviewObj["date"])
+            result["misc"]["user"]["pic"] = self.reviewObj["profile_image"]
+            result["misc"]["user"]["level"] = self.reviewObj["level"]
+            result["misc"]["user"]["reviews"]["total"] = self.reviewObj["total_reviews"]
+
+            if self.reviewObj["review_response_date"] is not None:
+                result["misc"]["review"]["business_response"]["date"] = convertStringDate2Date(self.reviewObj["review_response_date"])
+                result["misc"]["review"]["business_response"]["text"] = self.reviewObj["review_response"]
+
+        except Exception as e:
+            error = e
+            pass
 
         return result
 
@@ -65,8 +89,6 @@ class ReviewFormatter:
             result["id"] = self.reviewObj["id"]
             result["user"]["id"] = 0
             result["user"]["name"] = self.reviewObj["displayName"]
-            result["user"]["level"] = None
-            result["user"]["reviews"]["total"] = -1
 
             result["review"]["rating"] = self.reviewObj["reviewStarRating"]
             if self.reviewObj['hasExtendedText'] is True:
@@ -88,8 +110,7 @@ class ReviewFormatter:
         result["id"] = self.reviewObj["id"]
         result["user"]["id"] = self.reviewObj["userId"]
         result["user"]["name"] = self.reviewObj["user"]["markupDisplayName"]
-        result["user"]["level"] = None
-        result["user"]["reviews"]["total"] = self.reviewObj["user"]["reviewCount"]
+        result["misc"]["user"]["reviews"]["total"] = self.reviewObj["user"]["reviewCount"]
 
         result["review"]["rating"] = self.reviewObj["rating"]
         result["review"]["text"] = self.reviewObj["comment"]["text"]
@@ -105,20 +126,15 @@ class ReviewFormatter:
         result["id"] = self.reviewObj["ratingID"]
         result["user"]["id"] = self.reviewObj["consumerID"]
         result["user"]["name"] = self.reviewObj["consumerName"]
-        result["user"]["level"] = None
-        result["user"]["reviews"]["total"] = None
 
         result["review"]["rating"] = self.reviewObj["consumerOverallScore"]
         result["review"]["text"] = self.reviewObj["comment"]
         result["date"] = datetime.fromtimestamp((self.reviewObj['createDate']/1000)).isoformat()
 
-        result["misc"] = {
-            "user": {
-                "city": self.reviewObj["consumerCity"],
-                "state": self.reviewObj["consumerState"],
-                "zip": self.reviewObj["consumerZip"]
-            }
-        }
+        result["misc"]["user"]["city"] = self.reviewObj["consumerCity"]
+        result["misc"]["user"]["state"] = self.reviewObj["consumerState"]
+        result["misc"]["user"]["zip"] = self.reviewObj["consumerZip"]
+
         result["dump"] = self.reviewObj
 
         return result
@@ -129,8 +145,6 @@ class ReviewFormatter:
         result["id"] = self.reviewObj["reviewId"]
         result["user"]["id"] = self.reviewObj["userId"]
         result["user"]["name"] = self.reviewObj["user_info"]["displayName"]
-        result["user"]["level"] = None
-        result["user"]["reviews"]["total"] = None
 
         result["review"]["rating"] = self.reviewObj["rating"]
         result["review"]["text"] = self.reviewObj["body"]
@@ -145,18 +159,12 @@ class ReviewFormatter:
         result["id"] = 0
         result["user"]["id"] = 0
         result["user"]["name"] = self.reviewObj["author"]["name"]
-        result["user"]["level"] = None
-        result["user"]["reviews"]["total"] = None
 
         result["review"]["rating"] = int(self.reviewObj["reviewRating"]["ratingValue"])
         result["review"]["text"] = self.reviewObj["reviewBody"]
         result["date"] = dateparser.parse(self.reviewObj['datePublished']).isoformat()
 
-        result["misc"] = {
-            "review": {
-                "headline": self.reviewObj["headline"]
-            }
-        }
+        result["misc"]["review"]["headline"] = self.reviewObj["headline"]
 
         result["dump"] = self.reviewObj
 
@@ -169,18 +177,12 @@ class ReviewFormatter:
         result["id"] = self.reviewObj["id"]
         result["user"]["id"] = 0
         result["user"]["name"] = self.reviewObj["author"]["name"]
-        result["user"]["level"] = None
-        result["user"]["reviews"]["total"] = None
 
         result["review"]["rating"] = int(self.reviewObj["reviewRating"]["ratingValue"])
         result["review"]["text"] = self.reviewObj["reviewBody"]
         result["date"] = dateparser.parse(self.reviewObj['datePublished']).isoformat()
 
-        result["misc"] = {
-            "review": {
-                "response": self.reviewObj["reviewResponse"]
-            }
-        }
+        result["misc"]["review"]["business_response"]["text"] = self.reviewObj["reviewResponse"]
 
         result["dump"] = self.reviewObj
 
@@ -193,8 +195,6 @@ class ReviewFormatter:
         result["id"] = self.reviewObj["id"]
         result["user"]["id"] = 0
         result["user"]["name"] = 'Anonymous'
-        result["user"]["level"] = None
-        result["user"]["reviews"]["total"] = None
 
         result["review"]["rating"] = int(self.reviewObj["ratings"][0]["starRating"])
         result["review"]["text"] = self.reviewObj["reviewText"]
@@ -203,12 +203,7 @@ class ReviewFormatter:
         businessResponse = None
         if 'retort' in self.reviewObj:
             businessResponse = self.reviewObj['retort']['text']
-
-        result["misc"] = {
-            "review": {
-                "response": businessResponse
-            }
-        }
+            result["misc"]["review"]["business_response"]["text"] = businessResponse
 
         result["dump"] = self.reviewObj
 
@@ -221,8 +216,6 @@ class ReviewFormatter:
             result["id"] = self.reviewObj["id"]
             result["user"]["id"] = 0
             result["user"]["name"] = self.reviewObj['author']['name']
-            result["user"]["level"] = None
-            result["user"]["reviews"]["total"] = None
 
             result["review"]["rating"] = self.reviewObj["reviewRating"]["ratingValue"]
             result["review"]["text"] = self.reviewObj["reviewBody"]
@@ -231,12 +224,7 @@ class ReviewFormatter:
             businessResponse = None
             if 'retort' in self.reviewObj:
                 businessResponse = self.reviewObj['retort']['text']
-
-            result["misc"] = {
-                "review": {
-                    "response": businessResponse
-                }
-            }
+                result["misc"]["review"]["business_response"]["text"] = businessResponse
 
             result["dump"] = self.reviewObj
         except Exception as e:
@@ -252,15 +240,10 @@ class ReviewFormatter:
             result["id"] = self.reviewObj["id"]
             result["user"]["id"] = 0
             result["user"]["name"] = self.reviewObj['author']['name']
-            result["user"]["level"] = None
-            result["user"]["reviews"]["total"] = None
 
             result["review"]["rating"] = self.reviewObj["reviewRating"]["ratingValue"]
             result["review"]["text"] = self.reviewObj["reviewBody"]
             result["date"] = dateparser.parse(self.reviewObj['datePublished']).isoformat()
-
-            result["misc"] = {
-            }
 
             result["dump"] = self.reviewObj
         except Exception as e:
