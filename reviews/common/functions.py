@@ -14,7 +14,9 @@ def convertStringDate2Date(dateStr):
     else:
         dateValue = int(dateValue)
 
-    if timeStr == 'day' or timeStr == 'days':
+    if timeStr == 'hour' or timeStr == 'hours':
+        result = (date.today()-timedelta(hours=dateValue)).isoformat()
+    elif timeStr == 'day' or timeStr == 'days':
         result = (date.today()-timedelta(days=dateValue)).isoformat()
     elif timeStr == 'week' or timeStr == 'weeks':
         result = (date.today()-timedelta(weeks=dateValue)).isoformat()
