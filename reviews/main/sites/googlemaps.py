@@ -36,7 +36,7 @@ class Googlemaps:
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
         self.options.add_argument('--no-sandbox')
-        self.options.headless = debug
+        self.options.headless = config.get('chrome_headless_mode')
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
         #self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
 
