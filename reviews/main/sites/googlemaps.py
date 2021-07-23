@@ -92,8 +92,11 @@ class Googlemaps:
             avg_rating = self.browser.find_element_by_class_name("section-star-array").get_attribute("aria-label")
         except Exception as e:
             tb = traceback.format_exc()
-            avg_rating = self.browser.find_element_by_css_selector("ol[aria-label$='stars']").get_attribute("aria-label")
-            pass
+            try:
+                avg_rating = self.browser.find_element_by_css_selector("ol[aria-label$='stars']").get_attribute("aria-label")
+            except Exception as e:
+                tb = traceback.format_exc()
+                pass
 
         try:
             total_reviews = int(self.browser.find_element_by_css_selector("[aria-label$='reviews']").text.replace(' reviews', '').replace(',', ''))
@@ -343,9 +346,10 @@ class Googlemaps:
         time.sleep(2)
         self.getLocationData()
         self.getPopularTimes()
-        self.loadAllReviews()
-        self.expandAllReviews()
-        self.getReviewsData()
+        if self.location_data['rating']['total'] > 0:
+            self.loadAllReviews()
+            self.expandAllReviews()
+            self.getReviewsData()
         self.browser.quit()
 
         return(self.location_data)
