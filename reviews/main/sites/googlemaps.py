@@ -13,6 +13,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
+from bs4 import BeautifulSoup
 
 from reviews.common.config import config
 from reviews.main.reviews_formatter import ReviewFormatter
@@ -20,15 +21,24 @@ from reviews.main.reviews_formatter import ReviewFormatter
 
 class Googlemaps:
 
+    platformName = None
+    siteUrl = None
+    scrapedRawData = None
+    siteHeaders = None
+    siteId = None
+
     location_data = {}
 
     def __init__(self, debug=False):
+        self.platformName = self.__class__.__name__
+        print(f'Initalized {self.platformName} Engine')
+
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
         self.options.add_argument('--no-sandbox')
         self.options.headless = True
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
-        self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
+        #self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
 
         self.location_data = {
             "id": None,
@@ -122,12 +132,17 @@ class Googlemaps:
     def getReviewElements(self):
         reviewElements = 0
         try:
-            reviewElements = self.browser.find_elements_by_css_selector("div[data-review-id]")
+            reviewElements = self.browser.find_elements_by_css_selector("div[jsaction='mouseover:pane.review.in;mouseout:pane.review.out']")
         except Exception as e:
             print(e)
             pass
 
         return reviewElements
+
+    def _scrollReviewDiv(self):
+        scrollable_div = self.browser.find_element_by_css_selector('div.section-layout.section-scrollbox')
+        self.browser.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
+        time.sleep(4)
 
     def loadAllReviews(self):
         try:
@@ -139,12 +154,13 @@ class Googlemaps:
 
             currentlyLoadedReviews = self.getReviewElements()
             lastLoadedReviewCount = currentlyLoadedReviewsCnt = len(list(currentlyLoadedReviews))
-            while len(list(currentlyLoadedReviews)) <= totalReviewsCount:
+            while len(list(currentlyLoadedReviews)) < totalReviewsCount:
 
                 if retryCntr < 3:
                     lastLoadedReviewElement = currentlyLoadedReviews[-1]
-                    self.browser.execute_script('arguments[0].scrollIntoView(true)', lastLoadedReviewElement)
-                    time.sleep(2)
+                    #self.browser.execute_script('arguments[0].scrollIntoView(true)', lastLoadedReviewElement)
+                    #time.sleep(2)
+                    self._scrollReviewDiv()
 
                     currentlyLoadedReviews = self.getReviewElements()
                     currentlyLoadedReviewsCnt = len(list(currentlyLoadedReviews))
@@ -201,11 +217,109 @@ class Googlemaps:
 
     def getReviewsData(self):
         try:
+            soup = BeautifulSoup(self.browser.page_source, 'lxml')
+            reviewsObj = soup.find_all('div', attrs={"jsaction": "mouseover:pane.review.in;mouseout:pane.review.out"})
+            if reviewsObj is not None:
+                reviewFormatter = ReviewFormatter(self.platformName)
+                for review in reviewsObj:
+                    finaReview = {}
+                    finaReview['review_id'] = 0
+                    finaReview['user_id'] = 0
+                    finaReview['name'] = None
+                    finaReview['level'] = None
+                    finaReview['total_reviews'] = 0
+                    finaReview['profile_image'] = None
+                    finaReview["date"] = None
+                    finaReview['review'] = None
+                    finaReview['rating'] = 0
+                    finaReview['review_response'] = None
+                    finaReview['review_response_date'] = None
+
+                    #review Id
+                    finaReview['review_id'] = review['data-review-id']
+
+                    # reviewer Name
+                    reviewerDetailsObj = review.find("a", attrs={"aria-label": re.compile('^ Photo of ')})
+                    reviewerName = reviewerDetailsObj['aria-label'].replace('Photo of ', '').strip()
+                    finaReview['name'] = reviewerName
+
+                    # reviewer Id
+                    reviewerProfileUrl = reviewerDetailsObj['href'].strip()
+                    reviewerId = reviewerProfileUrl.split('/')[-2]
+                    finaReview['user_id'] = int(reviewerId)
+
+                    # reviewer profilePic
+                    reviewerImageUrl = review.find("img")
+                    if reviewerImageUrl is not None:
+                        finaReview['profile_image'] = reviewerImageUrl['src']
+
+                    # reviewer level & total reviews
+                    reviewerDetailsOuterObj = review.find("a", attrs={"href": re.compile('^https://www.google.com/maps/contrib/')})
+                    if reviewerDetailsOuterObj is not None:
+                        reviewerDetailsInnerObj = review.find("div", attrs={"class": re.compile('.*VdSJob')})
+                        spansObj = reviewerDetailsInnerObj.findChildren("span", recursive=False)
+                        spansArr = ["level", "total_reviews"]
+                        for cntr, spanObj in enumerate(spansObj):
+                            if cntr == 0:
+                                finaReview['level'] = spanObj.text.strip().replace(' reviews', '').replace(' review', '').replace('\u30fb19', '')
+                            elif cntr == 1:
+                                totalReviewsText = spanObj.text.replace('\u30fb19', '')
+                                totalReviewsText = spanObj.text.replace('・', '')
+                                totalReviewsText = totalReviewsText.replace(' reviews', '')
+                                totalReviewsText = totalReviewsText.replace(' review', '')
+                                totalReviewsText = int(totalReviewsText.strip())
+                                finaReview['total_reviews'] = totalReviewsText
+
+                    # reviewer rating
+                    reviewerRatingObj = review.find("span", attrs={"aria-label": re.compile('.*stars.*')})
+                    if reviewerRatingObj is not None:
+                        finaReview['rating'] = float(reviewerRatingObj['aria-label'].replace(' stars', ' ').replace(' star', ' ').strip())
+
+                        # reviewer Date
+                        reviewerRatingParentObj = reviewerRatingObj.find_parent("div")
+                        if reviewerRatingParentObj is not None:
+                            spansObj = reviewerRatingParentObj.findChildren("span", attrs={"class": re.compile('.*-date')}, recursive=False)
+                            if spansObj is not None:
+                                for cntr, spanObj in enumerate(spansObj):
+                                    finaReview['date'] = spanObj.text.strip()
+
+                    # reviewer review text
+                    reviewTextOuterObj = review.find("div", attrs={"jsinstance": '*0'})
+                    if reviewTextOuterObj is not None:
+                        spansObj = reviewTextOuterObj.findChildren("span", attrs={"class": re.compile('.*-text')}, recursive=False)
+                        for cntr, spanObj in enumerate(spansObj):
+                            finaReview['review'] = spanObj.text.strip()
+
+                    #business reply if any
+                    businessReplyOuterObj = review.find("div", attrs={"class": re.compile('.*-header')})
+                    if businessReplyOuterObj is not None:
+                        spansObj = businessReplyOuterObj.findChildren("span", recursive=False)
+                        for cntr, spanObj in enumerate(spansObj):
+                            if cntr == 1:
+                                finaReview['review_response_date'] = spanObj.text.strip()
+
+                        # business reply date if any
+                        businessReplyParentDiv = businessReplyOuterObj.find_parent("div")
+                        if businessReplyParentDiv is not None:
+                            businessReplyTextObj = businessReplyParentDiv.find("div", attrs={"class", re.compile('.*-text')})
+                            if businessReplyTextObj is not None:
+                                finaReview['review_response'] = businessReplyTextObj.text.strip()
+
+                    formattedReview = reviewFormatter.format(finaReview)
+                    self.location_data["reviews"].append(formattedReview)
+                    self.location_data["reviews_extracted"] = len(self.location_data["reviews"])
+
+        except Exception as e:
+            error = e
+            pass
+
+    def getReviewsDataOld(self):
+        try:
             reviews = self.getReviewElements()
             if(len(list(reviews)) != 0):
                 previousReviewText = None
 
-                reviewFormatter = ReviewFormatter('googlemaps')
+                reviewFormatter = ReviewFormatter(self.platformName)
                 for review in reviews:
                     reviewText = review.text
                     if reviewText not in ['Like', 'Share', 'More', ''] and len(reviewText) > 5:
@@ -233,6 +347,7 @@ class Googlemaps:
                                 finaReview['total_reviews'] = reviewerTotalReviews
                                 finaReview["date"] = None
                                 finaReview['review'] = None
+                                finaReview['reviewResponse'] = None
 
                                 if len(reviewDetailsArr) == 3:
                                     dateDetectionArr = reviewDetailsArr[2].split(' ')
@@ -285,6 +400,10 @@ class Googlemaps:
             print(e)
             pass
 
+    def __filter_string(self, str):
+        strOut = str.replace('\r', ' ').replace('\n', ' ').replace('\t', ' ')
+        return strOut
+
     def scrapeURL(self, url):
         try:
             self.browser.get(url)
@@ -302,6 +421,5 @@ class Googlemaps:
         self.expandAllReviews()
         self.getReviewsData()
         self.browser.quit()
-        self.browserReviews.quit()
 
         return(self.location_data)
