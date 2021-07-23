@@ -271,7 +271,7 @@ class Googlemaps:
                                 finaReview['total_reviews'] = totalReviewsText
 
                     # reviewer rating
-                    reviewerRatingObj = review.find("span", attrs={"aria-label": re.compile('.*stars.*')})
+                    reviewerRatingObj = review.find("span", attrs={"aria-label": re.compile('.*star.*')})
                     if reviewerRatingObj is not None:
                         finaReview['rating'] = float(reviewerRatingObj['aria-label'].replace(' stars', ' ').replace(' star', ' ').strip())
 
