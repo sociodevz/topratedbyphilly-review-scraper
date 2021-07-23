@@ -36,7 +36,7 @@ class Googlemaps:
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
         self.options.add_argument('--no-sandbox')
-        self.options.headless = True
+        self.options.headless = False
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
         #self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
 
@@ -271,7 +271,7 @@ class Googlemaps:
                                 finaReview['total_reviews'] = totalReviewsText
 
                     # reviewer rating
-                    reviewerRatingObj = review.find("span", attrs={"aria-label": re.compile('.*stars.*')})
+                    reviewerRatingObj = review.find("span", attrs={"aria-label": re.compile('.*star.*')})
                     if reviewerRatingObj is not None:
                         finaReview['rating'] = float(reviewerRatingObj['aria-label'].replace(' stars', ' ').replace(' star', ' ').strip())
 
