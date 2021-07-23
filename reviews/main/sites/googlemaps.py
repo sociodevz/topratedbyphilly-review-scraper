@@ -36,7 +36,7 @@ class Googlemaps:
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
         self.options.add_argument('--no-sandbox')
-        self.options.headless = True
+        self.options.headless = debug
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
         #self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
 
@@ -68,6 +68,7 @@ class Googlemaps:
             ActionChains(self.browser).move_to_element(element).click(element).perform()
             time.sleep(5)
         except Exception as e:
+            tb = traceback.format_exc()
             pass
 
     def expandAllReviews(self):
@@ -76,6 +77,7 @@ class Googlemaps:
             for expandReview in reviews:
                 expandReview.click()
         except Exception as e:
+            tb = traceback.format_exc()
             pass
 
     def getLocationData(self):
@@ -89,36 +91,44 @@ class Googlemaps:
         try:
             avg_rating = self.browser.find_element_by_class_name("section-star-array").get_attribute("aria-label")
         except Exception as e:
+            tb = traceback.format_exc()
             avg_rating = self.browser.find_element_by_css_selector("ol[aria-label$='stars']").get_attribute("aria-label")
             pass
 
         try:
             total_reviews = int(self.browser.find_element_by_css_selector("[aria-label$='reviews']").text.replace(' reviews', '').replace(',', ''))
         except Exception as e:
+            tb = traceback.format_exc()
             pass
 
         try:
             address = self.browser.find_element_by_css_selector("[data-item-id='address']")
+            address = address.text
         except Exception as e:
+            tb = traceback.format_exc()
             pass
 
         try:
             phone_number = self.browser.find_element_by_css_selector("[data-tooltip='Copy phone number']")
+            phone_number = phone_number.text
         except Exception as e:
+            tb = traceback.format_exc()
             pass
 
         try:
             website = self.browser.find_element_by_css_selector("[data-item-id='authority']")
+            website = website.text
         except Exception as e:
+            tb = traceback.format_exc()
             pass
 
         try:
             self.location_data = {
                 "id": 0,
                 "name": None,
-                "telephone": phone_number.text,
-                "address": address.text,
-                "website": website.text,
+                "telephone": phone_number,
+                "address": address,
+                "website": website,
                 "reviews": [],
                 "rating": {
                     "aggregate": float(str(avg_rating).replace('stars', '').strip()),
@@ -126,7 +136,7 @@ class Googlemaps:
                 },
             }
         except Exception as e:
-            print(e)
+            tb = traceback.format_exc()
             pass
 
     def getReviewElements(self):
@@ -134,7 +144,7 @@ class Googlemaps:
         try:
             reviewElements = self.browser.find_elements_by_css_selector("div[jsaction='mouseover:pane.review.in;mouseout:pane.review.out']")
         except Exception as e:
-            print(e)
+            tb = traceback.format_exc()
             pass
 
         return reviewElements
@@ -173,7 +183,7 @@ class Googlemaps:
                     break
 
         except Exception as e:
-            print(e)
+            tb = traceback.format_exc()
             pass
 
     def getLocationOpenCloseTime(self):
@@ -194,6 +204,7 @@ class Googlemaps:
                     self.location_data["time"][dayName] = dayHour
 
         except Exception as e:
+            tb = traceback.format_exc()
             pass
 
     def getPopularTimes(self):
@@ -213,6 +224,7 @@ class Googlemaps:
             for i, j in l.items():
                 self.location_data["popular_times"][i] = j
         except Exception as e:
+            tb = traceback.format_exc()
             pass
 
     def getReviewsData(self):
@@ -311,94 +323,7 @@ class Googlemaps:
                     self.location_data["reviews_extracted"] = len(self.location_data["reviews"])
 
         except Exception as e:
-            error = e
-            pass
-
-    def getReviewsDataOld(self):
-        try:
-            reviews = self.getReviewElements()
-            if(len(list(reviews)) != 0):
-                previousReviewText = None
-
-                reviewFormatter = ReviewFormatter(self.platformName)
-                for review in reviews:
-                    reviewText = review.text
-                    if reviewText not in ['Like', 'Share', 'More', ''] and len(reviewText) > 5:
-                        if reviewText != previousReviewText:
-                            previousReviewText = reviewText
-                            reviewDetailsArr = reviewText.splitlines()
-
-                            if len(reviewDetailsArr) > 0:
-                                reviewerLevelReviewsSplitArr = reviewDetailsArr[1].split('・')
-                                reviewerLevel = None
-                                reviewerTotalReviews = 0
-                                if len(reviewerLevelReviewsSplitArr) > 1:
-                                    reviewerLevel = reviewerLevelReviewsSplitArr[0]
-                                    reviewerTotalReviewsStr = reviewerLevelReviewsSplitArr[1]
-                                else:
-                                    reviewerTotalReviewsStr = reviewerLevelReviewsSplitArr[0]
-
-                                reviewerTotalReviews = int(reviewerTotalReviewsStr.split(' ')[0])
-
-                                finaReview = {}
-                                finaReview['review_id'] = 0
-                                finaReview['user_id'] = 0
-                                finaReview['name'] = reviewDetailsArr[0]
-                                finaReview['level'] = reviewerLevel
-                                finaReview['total_reviews'] = reviewerTotalReviews
-                                finaReview["date"] = None
-                                finaReview['review'] = None
-                                finaReview['reviewResponse'] = None
-
-                                if len(reviewDetailsArr) == 3:
-                                    dateDetectionArr = reviewDetailsArr[2].split(' ')
-                                    if dateDetectionArr[2] == 'ago':
-                                        finaReview['date'] = reviewDetailsArr[2]
-                                else:
-                                    finaReview['review'] = reviewDetailsArr[3]
-
-                                html_content = review.get_attribute('innerHTML')
-                                self.browserReviews.get("data:text/html;charset=utf-8,{html_content}".format(html_content=html_content))
-
-                                try:
-                                    reviewerUrl = self.browserReviews.find_element_by_css_selector("a[aria-label^=' Photo of']").get_attribute("href").strip()
-                                    reviewerUrl = reviewerUrl.replace('https://www.google.com/maps/contrib/', '')
-                                    finaReview['user_id'] = int(reviewerUrl.split('/')[0])
-                                except Exception as e:
-                                    pass
-
-                                try:
-                                    reviewId = self.browserReviews.find_element_by_css_selector("button[aria-label^=' Review actions']").get_attribute("data-review-id").strip()
-                                    finaReview['review_id'] = reviewId
-                                except Exception as e:
-                                    pass
-
-                                reviewRating = 0
-                                try:
-                                    reviewRatingStr = self.browserReviews.find_element_by_css_selector("span[aria-label$='stars ']").get_attribute("aria-label").strip()
-                                    reviewRatingArr = reviewRatingStr.split(' ')
-                                    reviewRating = int(reviewRatingArr[0].strip())
-
-                                except Exception as e:
-                                    reviewRatingStr = self.browserReviews.find_element_by_css_selector("span[aria-label$='star ']").get_attribute("aria-label").strip()
-                                    reviewRatingArr = reviewRatingStr.split(' ')
-                                    reviewRating = int(reviewRatingArr[0].strip())
-                                    pass
-
-                                try:
-                                    reviewDate = self.browserReviews.find_element_by_css_selector("span[class$='-date']").text.strip()
-                                    finaReview['date'] = reviewDate
-                                except Exception as e:
-                                    pass
-
-                                finaReview['rating'] = reviewRating
-
-                                formattedReview = reviewFormatter.format(finaReview)
-                                self.location_data["reviews"].append(formattedReview)
-                                self.location_data["reviews_extracted"] = len(self.location_data["reviews"])
-                self.browser.quit()
-        except Exception as e:
-            print(e)
+            tb = traceback.format_exc()
             pass
 
     def __filter_string(self, str):
@@ -410,7 +335,7 @@ class Googlemaps:
             self.browser.get(url)
             time.sleep(5)
         except Exception as e:
-            print(e)
+            tb = traceback.format_exc()
             self.browser.quit()
 
         self.clickOpenCloseTime()
