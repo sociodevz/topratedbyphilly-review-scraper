@@ -43,6 +43,10 @@ def fixLocalBusinessJSON(jsonObj):
         if 'reviewCount' not in jsonObj['aggregateRating']:
             jsonObj['aggregateRating']['reviewCount'] = 0
 
+    if 'telephone' not in jsonObj:
+        jsonObj['telephone'] = None
+
+
     return jsonObj
 
 
