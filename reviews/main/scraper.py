@@ -8,6 +8,7 @@ from reviews.main.sites.buildzoom import Buildzoom
 from reviews.main.sites.angi import Angi
 from reviews.main.sites.gaf import Gaf
 from reviews.main.sites.bestpickreports import Bestpickreports
+from reviews.main.sites.facebook import Facebook
 
 import requests
 import sys
