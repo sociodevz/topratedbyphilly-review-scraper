@@ -1,4 +1,5 @@
 import dateparser
+import pytz
 from datetime import datetime
 from reviews.common.functions import convertStringDate2Date
 
@@ -251,3 +252,31 @@ class ReviewFormatter:
             pass
 
         return result
+
+    def _formatFacebookReview(self):
+        result = self._getTemplate()
+
+        tz = pytz.timezone('UTC')
+
+        try:
+            result["id"] = self.reviewObj["review_id"]
+            result["user"]["id"] = self.reviewObj["user_id"]
+            result["user"]["name"] = self.reviewObj["name"]
+            result["review"]["rating"] = self.reviewObj["rating"]
+            result["review"]["text"] = self.reviewObj["review"]
+            result["date"] = datetime.fromtimestamp(self.reviewObj["date"], tz).isoformat()
+
+            result["misc"]["user"]["pic"] = self.reviewObj["profile_image"]
+            result["misc"]["user"]["level"] = self.reviewObj["level"]
+            result["misc"]["user"]["reviews"]["total"] = self.reviewObj["total_reviews"]
+
+            if self.reviewObj["review_response_date"] is not None:
+                result["misc"]["review"]["business_response"]["date"] = datetime.fromtimestamp(self.reviewObj["review_response_date"], tz).isoformat()
+                result["misc"]["review"]["business_response"]["text"] = self.reviewObj["review_response"]
+
+        except Exception as e:
+            error = e
+            pass
+
+        return result
+
