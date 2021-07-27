@@ -39,6 +39,8 @@ class Facebook:
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
         self.options.add_argument('--no-sandbox')
+        self.options.add_argument('--lang=en-US')
+        # self.options.add_argument('--proxy-server=u1.p.webshare.io:10000')
         self.options.headless = config.get('chrome_headless_mode')
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
 
@@ -67,6 +69,26 @@ class Facebook:
 
         return result
 
+    def extractCompanyPageName(self):
+        result = None
+        try:
+            siteUrlArr = self.location_data['id'].split('/')
+            result = siteUrlArr[-2]  # we want 2nd last, because last element = ''
+        except Exception as e:
+            tb = traceback.format_exc()
+            pass
+
+        return result
+
+    def forceEnglish(self):
+        try:
+            pageName = self.extractCompanyPageName()
+            script = f'require("IntlUtils").setCookieLocale("en_US", "en_US", "https://en-us.facebook.com/{pageName}/reviews/?locale2=en_US", "www_list_selector_more", null); return false;'
+            self.browser.execute_script(script)
+        except Exception as e:
+            tb = traceback.format_exc()
+            pass
+
     def clickAllReviewsButton(self):
         try:
             element = self.browser.find_element_by_css_selector("[aria-label$='reviews']")
@@ -88,9 +110,18 @@ class Facebook:
 
     def expandAllReviews(self):
         try:
-            readMoreElements = self.browser.find_elements_by_css_selector("a[class='see_more_link'")
+            readMoreElements = self.browser.find_elements_by_css_selector("a[class='see_more_link']")
             for readMoreElement in readMoreElements:
                 readMoreElement.click()
+        except Exception as e:
+            tb = traceback.format_exc()
+            pass
+
+    def loadMoreComments(self):
+        try:
+            loadMoreCommentsElements = self.browser.find_elements_by_css_selector('a[data-ft=\'{"tn":"Q"}\']')
+            for loadMoreElement in loadMoreCommentsElements:
+                loadMoreElement.click()
         except Exception as e:
             tb = traceback.format_exc()
             pass
@@ -173,7 +204,7 @@ class Facebook:
             reviewsObj = soup.find_all('div', attrs={"class": "userContentWrapper"})
             if reviewsObj is not None:
                 reviewFormatter = ReviewFormatter(self.platformName)
-                for review in reviewsObj:
+                for cntr, review in enumerate(reviewsObj):
                     finaReview = {}
                     finaReview['review_id'] = 0
                     finaReview['user_id'] = 0
@@ -187,8 +218,15 @@ class Facebook:
                     finaReview['review_response'] = None
                     finaReview['review_response_date'] = None
 
+                    try:
+                        if review['id'] == 'own_review_container':
+                            continue
+                    except Exception as e:
+                        tb = traceback.format_exc()
+                        pass
+
                     # Name
-                    userDetailsObj = review.find("span", attrs={"data-ft": '{"tn":"m"}'})
+                    userDetailsObj = review.find(attrs={"data-ft": '{"tn":"m"}'})
                     if userDetailsObj is not None:
                         finaReview['name'] = userDetailsObj['title'].strip()
 
@@ -238,7 +276,7 @@ class Facebook:
                             finaReview['review_response_date'] = int(businessReplyDateObj['data-utime'])
 
                     formattedReview = reviewFormatter.format(finaReview)
-                    self.location_data["reviews"].append(finaReview)
+                    self.location_data["reviews"].append(formattedReview)
                     self.location_data["reviews_extracted"] = len(self.location_data["reviews"])
 
         except Exception as e:
@@ -291,10 +329,12 @@ class Facebook:
             return False
 
         self.getLocationData()
+        self.forceEnglish()
         if self.location_data['rating']['total'] > 0:
             self.loadAllReviews()
             self.closeLoginBlockerDialog()
             self.expandAllReviews()
+            self.loadMoreComments()
             self.getReviewsData()
         self.browser.quit()
 
