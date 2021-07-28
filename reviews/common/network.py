@@ -31,6 +31,30 @@ class Network:
 
         return returnArr
 
+    def fetchNew(method, url, payloadArr=None, headersArr=None):
+        returnArr = {"code": 0}
+        try:
+            if headersArr is None or len(headersArr) == 0:
+                headersArr = {}
+                useragent = UserAgent()
+                headersArr.update(useragent.getRandom())
+
+            proxies = None
+            if config.get('proxy_enabled') is True:
+                proxies = {'https': config.get('proxy_url_ip')}
+
+            if method == 'GET':
+                response = requests.get(url, headers=headersArr, proxies=proxies, data=payloadArr)
+            elif method == 'POST':
+                response = requests.post(url, headers=headersArr, proxies=proxies, data=payloadArr)
+
+            returnArr = {"code": response.status_code, "headers": {"requested": headersArr, "received": response.headers}, "body": response.text}
+        except Exception as e:
+            tb = sys.exc_info()[2]
+            print(e.with_traceback(tb))
+
+        return returnArr
+
     def sessionFetch(method, url, payloadArr=None, headersArr=None, sessionDataArr=None):
         returnArr = {"code": 0}
         try:
