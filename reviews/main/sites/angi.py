@@ -35,7 +35,7 @@ class Angi:
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
-            scrapedRawData = Network.fetch(url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl
@@ -112,7 +112,7 @@ class Angi:
                         offset = i * limitPerPage
                         categoryReviewUrl = reviewBaseUrl.replace('OFFSET_NUMBER', str(offset)).replace('CATEGORY_ID', str(categoryFilterId))
 
-                        scrapedRawData = Network.fetch(categoryReviewUrl, self.siteHeaders)
+                        scrapedRawData = Network.fetch(Network.GET, categoryReviewUrl, self.siteHeaders)
                         if(scrapedRawData['code'] == 200):
                             reviewsRawData = json.loads(scrapedRawData['body'])
                             if 'reviews' in reviewsRawData:
