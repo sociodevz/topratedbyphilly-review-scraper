@@ -1,10 +1,11 @@
-from reviews.main.scraper import Scraper
+import requests
 import json
+
+from reviews.main.scraper import Scraper
 from argparse import ArgumentParser
 import reviews.main
 from reviews.common.config import config, updateConfigFromArgs
 
-import requests
 
 scraperSites = config.get('scraper_sites')
 parser = ArgumentParser()

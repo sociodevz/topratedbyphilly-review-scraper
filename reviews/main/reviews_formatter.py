@@ -17,7 +17,7 @@ class ReviewFormatter:
             funcName = f"self._format{self.platform}Review"
             result = eval(funcName + "()")
         except Exception as e:
-            error = e
+            logger.exception('Exception')
             pass
 
         return result
@@ -78,7 +78,7 @@ class ReviewFormatter:
                 result["misc"]["review"]["business_response"]["text"] = self.reviewObj["review_response"]
 
         except Exception as e:
-            error = e
+            logger.exception('Exception')
             pass
 
         return result
@@ -100,7 +100,7 @@ class ReviewFormatter:
 
             result["dump"] = self.reviewObj
         except Exception as e:
-            error = e
+            logger.exception('Exception')
             pass
 
         return result
@@ -229,7 +229,7 @@ class ReviewFormatter:
 
             result["dump"] = self.reviewObj
         except Exception as e:
-            error = e
+            logger.exception('Exception')
             pass
 
         return result
@@ -248,7 +248,7 @@ class ReviewFormatter:
 
             result["dump"] = self.reviewObj
         except Exception as e:
-            error = e
+            logger.exception('Exception')
             pass
 
         return result
@@ -275,7 +275,7 @@ class ReviewFormatter:
                 result["misc"]["review"]["business_response"]["text"] = self.reviewObj["review_response"]
 
         except Exception as e:
-            error = e
+            logger.exception('Exception')
             pass
 
         return result
@@ -302,7 +302,7 @@ class ReviewFormatter:
 
             result["dump"] = self.reviewObj
         except Exception as e:
-            error = e
+            logger.exception('Exception')
             pass
 
         return result
