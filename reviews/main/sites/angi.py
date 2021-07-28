@@ -13,6 +13,7 @@ from reviews.common.network import Network
 from reviews.common.config import config
 from reviews.main.reviews_formatter import ReviewFormatter
 from reviews.common.functions import *
+from reviews.common.logger import logger
 
 
 class Angi:
@@ -26,6 +27,7 @@ class Angi:
     def __init__(self):
         self.platformName = self.__class__.__name__
         print(f'Initalized {self.platformName} Engine')
+        logger.info(f'Initalized {self.platformName} Engine')
         pass
 
     def scrapeURL(self, url):
@@ -122,7 +124,7 @@ class Angi:
                                         result.append(formattedReview)
                             sleep(randrange(1, 3))
         except Exception as e:
-            error = e
+            logger.exception('Exception')
             pass
 
         return result

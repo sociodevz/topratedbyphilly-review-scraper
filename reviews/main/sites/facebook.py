@@ -21,6 +21,8 @@ from reviews.common.config import config
 from reviews.common.functions import fixLocalBusinessJSON
 from reviews.main.reviews_formatter import ReviewFormatter
 
+from reviews.common.logger import logger
+
 
 class Facebook:
 
@@ -33,8 +35,10 @@ class Facebook:
     location_data = {}
 
     def __init__(self, debug=False):
+
         self.platformName = self.__class__.__name__
         print(f'Initalized {self.platformName} Engine')
+        logger.info(f'Initalized {self.platformName} Engine')
 
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
@@ -75,7 +79,7 @@ class Facebook:
             siteUrlArr = self.location_data['id'].split('/')
             result = siteUrlArr[-2]  # we want 2nd last, because last element = ''
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
         return result
@@ -86,7 +90,7 @@ class Facebook:
             script = f'require("IntlUtils").setCookieLocale("en_US", "en_US", "https://en-us.facebook.com/{pageName}/reviews/?locale2=en_US", "www_list_selector_more", null); return false;'
             self.browser.execute_script(script)
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def clickAllReviewsButton(self):
@@ -96,7 +100,7 @@ class Facebook:
             ActionChains(self.browser).move_to_element(element).click(element).perform()
             time.sleep(5)
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def closeLoginBlockerDialog(self):
@@ -105,7 +109,7 @@ class Facebook:
             if element is not None:
                 element.click()
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def expandAllReviews(self):
@@ -114,7 +118,7 @@ class Facebook:
             for readMoreElement in readMoreElements:
                 readMoreElement.click()
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def loadMoreComments(self):
@@ -123,7 +127,7 @@ class Facebook:
             for loadMoreElement in loadMoreCommentsElements:
                 loadMoreElement.click()
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def getLocationData(self):
@@ -146,7 +150,7 @@ class Facebook:
                 },
             }
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def getReviewElements(self, countOnly):
@@ -162,7 +166,7 @@ class Facebook:
                 else:
                     reviewElements = reviewElementsInner
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
         return reviewElements
@@ -195,7 +199,7 @@ class Facebook:
                     break
 
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def getReviewsData(self):
@@ -222,7 +226,7 @@ class Facebook:
                         if review['id'] == 'own_review_container':
                             continue
                     except Exception as e:
-                        tb = traceback.format_exc()
+                        #logger.exception('Exception')
                         pass
 
                     # Name
@@ -280,7 +284,7 @@ class Facebook:
                     self.location_data["reviews_extracted"] = len(self.location_data["reviews"])
 
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def __filter_string(self, str):
@@ -304,7 +308,7 @@ class Facebook:
             baseUrl += '?locale2=en_US'
             result = baseUrl
         except Exception as e:
-            error = e
+            logger.exception('Exception')
             pass
 
         return result
@@ -324,7 +328,7 @@ class Facebook:
                 self.browser.get(f"file://{fileNamePath}")
 
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             self.browser.quit()
             return False
 

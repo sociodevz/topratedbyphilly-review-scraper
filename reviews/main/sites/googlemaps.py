@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 
 from reviews.common.config import config
 from reviews.main.reviews_formatter import ReviewFormatter
-
+from reviews.common.logger import logger
 
 class Googlemaps:
 
@@ -32,6 +32,7 @@ class Googlemaps:
     def __init__(self, debug=False):
         self.platformName = self.__class__.__name__
         print(f'Initalized {self.platformName} Engine')
+        logger.info(f'Initalized {self.platformName} Engine')
 
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
@@ -68,7 +69,7 @@ class Googlemaps:
             ActionChains(self.browser).move_to_element(element).click(element).perform()
             time.sleep(5)
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def expandAllReviews(self):
@@ -77,7 +78,7 @@ class Googlemaps:
             for expandReview in reviews:
                 expandReview.click()
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def getLocationData(self):
@@ -91,38 +92,38 @@ class Googlemaps:
         try:
             avg_rating = self.browser.find_element_by_class_name("section-star-array").get_attribute("aria-label")
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             try:
                 avg_rating = self.browser.find_element_by_css_selector("ol[aria-label$='stars']").get_attribute("aria-label")
             except Exception as e:
-                tb = traceback.format_exc()
+                logger.exception('Exception')
                 pass
 
         try:
             total_reviews = int(self.browser.find_element_by_css_selector("[aria-label$='reviews']").text.replace(' reviews', '').replace(',', ''))
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
         try:
             address = self.browser.find_element_by_css_selector("[data-item-id='address']")
             address = address.text
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
         try:
             phone_number = self.browser.find_element_by_css_selector("[data-tooltip='Copy phone number']")
             phone_number = phone_number.text
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
         try:
             website = self.browser.find_element_by_css_selector("[data-item-id='authority']")
             website = website.text
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
         try:
@@ -139,7 +140,7 @@ class Googlemaps:
                 },
             }
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def getReviewElements(self):
@@ -147,7 +148,7 @@ class Googlemaps:
         try:
             reviewElements = self.browser.find_elements_by_css_selector("div[jsaction='mouseover:pane.review.in;mouseout:pane.review.out']")
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
         return reviewElements
@@ -186,7 +187,7 @@ class Googlemaps:
                     break
 
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def getLocationOpenCloseTime(self):
@@ -207,7 +208,7 @@ class Googlemaps:
                     self.location_data["time"][dayName] = dayHour
 
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def getPopularTimes(self):
@@ -227,7 +228,7 @@ class Googlemaps:
             for i, j in l.items():
                 self.location_data["popular_times"][i] = j
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def getReviewsData(self):
@@ -326,7 +327,7 @@ class Googlemaps:
                     self.location_data["reviews_extracted"] = len(self.location_data["reviews"])
 
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             pass
 
     def __filter_string(self, str):
@@ -338,7 +339,7 @@ class Googlemaps:
             self.browser.get(url)
             time.sleep(5)
         except Exception as e:
-            tb = traceback.format_exc()
+            logger.exception('Exception')
             self.browser.quit()
 
         self.clickOpenCloseTime()

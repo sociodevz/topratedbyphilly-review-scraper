@@ -1,3 +1,4 @@
+from reviews.common.logger import logger
 from reviews.main.sites.yelp import Yelp
 from reviews.main.sites.bbb import Bbb
 from reviews.main.sites.trustpilot import Trustpilot

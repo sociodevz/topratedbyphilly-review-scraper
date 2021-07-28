@@ -1,4 +1,5 @@
 config = {
+    'logger_severity_level': 'ERROR',
     'chrome_headless_mode': True,
     'project_physical_root_path': '/var/www/html/topratedbyphilly/scraper/',
     'scraper_mode': 'online',
