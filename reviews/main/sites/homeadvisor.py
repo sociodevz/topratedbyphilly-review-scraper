@@ -39,7 +39,7 @@ class Homeadvisor:
             userAgent = UserAgent()
             userAgentList = userAgent.getRandom()
             headersArr.update(userAgentList)
-            scrapedRawData = Network.fetch(url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
 
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
@@ -130,7 +130,7 @@ class Homeadvisor:
         reviewFormatter = ReviewFormatter(self.platformName)
         for i in range(math.ceil(int(totalReviews/10))+1):
             reviewUrl = reviewBaseUrl.replace("PAGE_NUMBER", str(i+1))
-            scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
+            scrapedRawData = Network.fetch(Network.GET, reviewUrl, self.siteHeaders)
             if(scrapedRawData['code'] == 200):
                 reviewsRawData = json.loads(scrapedRawData['body'])
                 if 'ratings' in reviewsRawData:

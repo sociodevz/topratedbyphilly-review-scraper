@@ -38,7 +38,7 @@ class Houzz:
             userAgent = UserAgent()
             userAgentList = userAgent.getRandom()
             headersArr.update(userAgentList)
-            scrapedRawData = Network.fetch(url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl
@@ -116,7 +116,7 @@ class Houzz:
         reviewFormatter = ReviewFormatter(self.platformName)
         for i in range(math.ceil(int(totalReviews/45))+1):
             reviewUrl = reviewBaseUrl.replace("ITEM_NUMBER", str(i))
-            scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
+            scrapedRawData = Network.fetch(Network.GET, reviewUrl, self.siteHeaders)
             if(scrapedRawData['code'] == 200):
                 reviewsRawData = json.loads(scrapedRawData['body'])
                 if 'ctx' in reviewsRawData:

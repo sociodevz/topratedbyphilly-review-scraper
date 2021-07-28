@@ -33,7 +33,7 @@ class Thumbtack:
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
-            scrapedRawData = Network.fetch(url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl
@@ -214,7 +214,7 @@ class Thumbtack:
 
             payloadArr = data = '{"operationName":"ServicePageReviews","variables":{"reviewsPageToken":"{\\"Input\\":{\\"servicePK\\":\\"' + str(self.siteId) + '\\",\\"supportedSections\\":[\\"HEADER\\",\\"BUSINESS_INFO\\",\\"SECONDARY_CTAS_V2\\",\\"QUESTIONS\\",\\"SPECIALTIES\\",\\"REVIEWS\\",\\"MEDIA\\",\\"PAST_PROJECTS\\",\\"ACTION_CARD_V2_PRECONTACT\\",\\"ACTION_CARD_V2_POSTCONTACT\\",\\"CREDENTIALS\\",\\"SAFETY_MEASURES\\",\\"BREADCRUMBS\\",\\"INTERNAL_LINKS\\"],\\"categoryPK\\":\\"' + str(self.extractCategoryId()) + '\\",\\"projectPk\\":null,\\"keywordPk\\":null,\\"isSponsored\\":null,\\"searchFormAnswers\\":[{\\"questionID\\":null,\\"dateAnswers\\":null,\\"dateAndTimeAnswers\\":null,\\"textAnswers\\":null,\\"selectedAnswers\\":null,\\"selectedWithTextAnswers\\":null,\\"imageUploadAnswers\\":null}],\\"servicePageToken\\":null,\\"requestPK\\":null,\\"quotePK\\":null,\\"searchQuery\\":\\"Bathroom Remodel\\",\\"source\\":null,\\"zipCode\\":null,\\"proListRequestPk\\":null,\\"relevantServiceCategoryPks\\":null,\\"supportedIntroTypes\\":[\\"availability\\",\\"availability_with_instant_book\\",\\"availability_with_request_to_book\\",\\"call\\",\\"contact\\",\\"estimation\\",\\"instant_consult\\",\\"phone_consultation\\",\\"service_call\\"],\\"supportedMediaTypes\\":[\\"IMAGE\\",\\"PROJECT\\",\\"VIDEO\\",\\"REVIEW\\"],\\"queryType\\":null,\\"reviewPk\\":null,\\"instantBookSlotsInput\\":null},\\"Offset\\":\\"' + str(pageOffSet) + '\\"}"},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"621f284bbe86ebc6cc9159dcb64dfb79345faa649cc71042537d92c5a4900319"}}}'
 
-            scrapedRawData = Network.fetchNew(Network.POST, reviewUrl, payloadArr, self.siteHeaders)
+            scrapedRawData = Network.fetch(Network.POST, reviewUrl, self.siteHeaders, payloadArr)
             if(scrapedRawData['code'] == 200):
                 reviewsRawData = json.loads(scrapedRawData['body'])
                 if 'data' in reviewsRawData:

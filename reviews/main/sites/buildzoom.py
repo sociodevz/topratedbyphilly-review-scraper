@@ -35,7 +35,7 @@ class Buildzoom:
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
-            scrapedRawData = Network.fetch(url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl
