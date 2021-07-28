@@ -280,3 +280,29 @@ class ReviewFormatter:
 
         return result
 
+    def _formatThumbtackReview(self):
+        result = self._getTemplate()
+
+        tz = pytz.timezone('UTC')
+
+        try:
+            result["user"]["name"] = self.reviewObj["attribution"]
+            result["review"]["rating"] = self.reviewObj["rating"]["rating"]
+            if len(self.reviewObj["text"]["segments"]) > 0:
+                result["review"]["text"] = ''
+            for segment in self.reviewObj["text"]["segments"]:
+                result["review"]["text"] += segment["text"]
+
+            datetimeObj = datetime.strptime(self.reviewObj['labels'][0]['text'].replace(',', ''), '%b %d %Y')
+            result["date"] = datetimeObj.isoformat()
+
+            if 'response' in self.reviewObj:
+                if self.reviewObj['response'] is not None:
+                    result["misc"]["review"]["business_response"]["text"] = self.reviewObj["response"]["text"]
+
+            result["dump"] = self.reviewObj
+        except Exception as e:
+            error = e
+            pass
+
+        return result
