@@ -36,7 +36,7 @@ class Bestpickreports:
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
-            scrapedRawData = Network.fetch(url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl
@@ -147,7 +147,7 @@ class Bestpickreports:
             for i in range(math.ceil(int(totalReviews/limitPerPage))+1):
                 reviewUrl = reviewBaseUrl.replace('PAGE_NUMBER', str(i))
 
-                scrapedRawData = Network.fetch(reviewUrl, self.siteHeaders)
+                scrapedRawData = Network.fetch(Network.GET, reviewUrl, self.siteHeaders)
                 if(scrapedRawData['code'] == 200):
                     reviewsRawData = scrapedRawData['body']
                     soup = BeautifulSoup(reviewsRawData, 'lxml')

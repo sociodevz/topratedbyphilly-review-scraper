@@ -9,6 +9,7 @@ from reviews.main.sites.angi import Angi
 from reviews.main.sites.gaf import Gaf
 from reviews.main.sites.bestpickreports import Bestpickreports
 from reviews.main.sites.facebook import Facebook
+from reviews.main.sites.thumbtack import Thumbtack
 
 import requests
 import sys

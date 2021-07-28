@@ -10,7 +10,7 @@ class Network:
     POST = "POST"
     GET = "GET"
 
-    def fetch(url, headersArr):
+    def fetch(method, url, headersArr=None, payloadArr=None):
         returnArr = {"code": 0}
         try:
             if headersArr is None or len(headersArr) == 0:
@@ -18,11 +18,14 @@ class Network:
                 useragent = UserAgent()
                 headersArr.update(useragent.getRandom())
 
+            proxies = None
             if config.get('proxy_enabled') is True:
                 proxies = {'https': config.get('proxy_url_ip')}
-                response = requests.get(url, headers=headersArr, proxies=proxies)
-            else:
-                response = requests.get(url, headers=headersArr)
+
+            if method == 'GET':
+                response = requests.get(url, headers=headersArr, proxies=proxies, data=payloadArr)
+            elif method == 'POST':
+                response = requests.post(url, headers=headersArr, proxies=proxies, data=payloadArr)
 
             returnArr = {"code": response.status_code, "headers": {"requested": headersArr, "received": response.headers}, "body": response.text}
         except Exception as e:

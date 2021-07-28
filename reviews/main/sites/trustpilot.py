@@ -33,7 +33,7 @@ class Trustpilot:
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
-            scrapedRawData = Network.fetch(url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl
@@ -111,7 +111,7 @@ class Trustpilot:
                 result.append(formattedReview)
 
         while reviewBaseUrl is not None:
-            scrapedRawData = Network.fetch(reviewBaseUrl, self.siteHeaders)
+            scrapedRawData = Network.fetch(Network.GET, reviewBaseUrl, self.siteHeaders)
             if(scrapedRawData['code'] == 200):
                 self.scrapedRawData = scrapedRawData['body']
                 reviewBaseUrl = self.extractNextPageUrl()
