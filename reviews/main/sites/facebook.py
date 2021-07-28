@@ -263,7 +263,8 @@ class Facebook:
                         if reviewTextInnerObj is not None:
                             finaReview['review'] = ''
                             for reviewTextObj in reviewTextInnerObj:
-                                finaReview['review'] += reviewTextObj.text.strip()
+                                if reviewTextObj is not None:
+                                    finaReview['review'] += reviewTextObj.text.strip()
 
                     # business Reply Text
                     businessReplyMainObj = review.find("div", attrs={"aria-label": "Comment"})
