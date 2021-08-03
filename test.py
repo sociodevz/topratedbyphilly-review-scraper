@@ -1,40 +1,166 @@
 import os
 import pathlib
+from typing import Iterable
 import requests
+import re
+import itertools
+import csv
+import json
+import html
+import time
+import datetime
+from pathlib import Path
 from hashlib import sha256
 from http.cookiejar import MozillaCookieJar
 from reviews.common.config import config
+from reviews.common.network import Network
+from bs4 import BeautifulSoup
+from csv import writer
 
-siteUrl = 'https://www.houzz.com/professionals/roofing-and-gutters/northern-lights-exteriors-pfvwus-pf~973447938'
-siteHash = sha256(siteUrl.encode('utf-8')).hexdigest()
+def writeCSV(fileNamePath, fields, rows):
+    try:
+        append = False
+        file = Path(fileNamePath)
+        if file.is_file():
+            append = True
 
-cookiesFile = f"{config.get('project_physical_root_path')}tmp/cookies/{siteHash}.txt" # Places "cookies.txt" next to the script file.
-cj = MozillaCookieJar(cookiesFile)
-if os.path.exists(cookiesFile):  # Only attempt to load if the cookie file exists.
-    cj.load(ignore_discard=True, ignore_expires=True)  # Loads session cookies too (expirydate=0).
+        with open(fileNamePath, 'a') as f:
+            write = csv.writer(f)
+            if append is False:
+                write.writerow(fields)
+            write.writerows(rows)
+    except Exception as e:
+        error = e
+        pass
 
-s = requests.Session()
-s.headers = {
-    'authority': 'www.houzz.com',
-    'pragma': 'no-cache',
-    'cache-control': 'no-cache',
-    'accept': '*/*',
-    'x-requested-with': 'XMLHttpRequest',
-    'x-hz-request': 'true',
-    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
-    'x-hz-view-mode': 'null',
-    'sec-gpc': '1',
-    'sec-fetch-site': 'same-origin',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-dest': 'empty',
-    'referer': 'https://www.houzz.com/professionals/roofing-and-gutters/northern-lights-exteriors-pfvwus-pf~973447938',
-    'accept-language': 'en-GB,en;q=0.9',
-}
+def scrapeTopRatedDirectory(url, category):
 
-s.cookies = cj  # Tell Requests session to use the cookiejar.
+    resultArr = Network.fetch(Network.GET, url)
+    # with open('tmp/topratedlocal.html') as file:
+    #     resultArr = {
+    #         'code': 200,
+    #         'body': file.read()
+    #     }
 
-# DO STUFF HERE WHICH REQUIRES THE PERSISTENT COOKIES...
-response = s.get("https://www.houzz.com/professionals/roofing-and-gutters/northern-lights-exteriors-pfvwus-pf~973447938")
-response = s.get("https://www.houzz.com/j/ajax/profileReviewsAjax?userId=5057474&proId=177044&fromItem=12&itemsPerPage=134")
-print(response.text)
-cj.save(ignore_discard=True, ignore_expires=True)  # Saves session cookies too (expirydate=0).
+    if resultArr['code'] == 200:
+        bodyHtml = resultArr['body']
+
+        if bodyHtml != '':
+            companyNameArr = []
+            companyUrlArr = []
+            companyRatingArr = []
+            companyDetailsArr = []
+
+            soup = BeautifulSoup(bodyHtml, 'lxml')
+            companyNameList = soup.find_all('a', attrs={'class': 'listing__heading'})
+            if companyNameList is not None:
+                for cntr, companyNameObj in enumerate(companyNameList):
+                    if cntr > 1:
+                        companyNameArr.append(companyNameObj.text.strip('.').split('.')[-1].strip())
+                        companyUrlArr.append("https://www.topratedlocal.com" + str(companyNameObj['href']))
+
+            companyRatingList = soup.find_all('span', attrs={'class': 'pill-section'})
+            if companyRatingList is not None:
+                for companyRatingObj in companyRatingList:
+                    value = companyRatingObj.text.strip()
+                    try:
+                        float(value)
+                        companyRatingArr.append(float(value))
+                    except ValueError:
+                        pass
+
+            children1 = soup.find_all('div', attrs={'class': 'u-bottom5'})
+            if children1 is not None:
+                for child in children1:
+                    parentObj = child.find_parent('div')
+                    if parentObj is not None:
+                        regex = (r"Of ([0-9]*) ratings?/.*?on\n"
+                                r"              ([0-9]*) verified review sites?, this business has an average rating of\n"
+                                r"        ([0-9.]*) stars\.\n"
+                                r"    This earns them a Rating Score™ of ([0-9.]*) which ranks them #([0-9]*) in the.*?area\.")
+                        matches = re.findall(regex, bodyHtml, re.DOTALL | re.MULTILINE | re.IGNORECASE)
+                        if len(matches) > 0:
+                            for match in matches:
+                                companyDetailsArr.append(match)
+
+            fields = ['name', 'url', 'rating', 'total_ratings', 'verified_sites', 'average_rating', 'rating_score']
+            rows = []
+
+            for (name, url, rating, detailedRating) in zip(companyNameArr, companyUrlArr, companyRatingArr, companyDetailsArr):
+                rows.append([name, url, rating, detailedRating[0], detailedRating[1], detailedRating[2], detailedRating[3]])
+
+            writeCSV(f"tmp/topratedlocal_{category}.csv", fields, rows)
+
+
+
+def scrapeYelpDirectory(url, category):
+
+    resultArr = Network.fetch(Network.GET, url)
+    # with open('tmp/yelpdirectory.html') as file:
+    #     resultArr = {
+    #         'code': 200,
+    #         'body': file.read()
+    #     }
+
+    if resultArr['code'] == 200:
+        bodyHtml = resultArr['body']
+
+        if bodyHtml != '':
+            companyNameArr = []
+            companyUrlArr = []
+            companyRatingArr = []
+            companyDetailsArr = []
+
+        soup = BeautifulSoup(bodyHtml, 'lxml')
+
+        jsonRawStr = None
+        jsonElementList = soup.find_all('script', attrs={'type': 'application/json', 'data-hypernova-key': re.compile('yelpfrontend.*')})
+        if jsonElementList is not None:
+            for jsonElement in jsonElementList:
+                jsonRawStr = jsonElement.contents[0]
+
+        if jsonRawStr is not None:
+            regex = r"--(.*)--"
+            matches = re.findall(regex, jsonRawStr, re.MULTILINE | re.IGNORECASE)
+            if len(matches) > 0:
+                jsonStr = html.unescape(matches[0])
+                try:
+                    jsonArr = json.loads(jsonStr)
+                    if 'legacyProps' in jsonArr:
+                        if 'searchAppProps' in jsonArr['legacyProps']:
+                            if 'searchPageProps' in jsonArr['legacyProps']['searchAppProps']:
+                                if 'mainContentComponentsListProps' in jsonArr['legacyProps']['searchAppProps']['searchPageProps']:
+                                    businessesList = jsonArr['legacyProps']['searchAppProps']['searchPageProps']['mainContentComponentsListProps']
+                                    for business in businessesList:
+                                        if 'bizId' in business:
+                                            if business['searchResultBusiness']['isAd'] is False:
+                                                companyNameArr.append(business['searchResultBusiness']['name'])
+                                                companyUrlArr.append('https://www.yelp.com' + business['searchResultBusiness']['businessUrl'])
+                                                companyRatingArr.append(business['searchResultBusiness']['rating'])
+                                                companyDetailsArr.append(business['searchResultBusiness']['reviewCount'])
+
+                    fields = ['name', 'url', 'rating', 'total_ratings']
+                    rows = []
+
+                    for (name, url, rating, totalRatings) in zip(companyNameArr, companyUrlArr, companyRatingArr, companyDetailsArr):
+                        rows.append([name, url, rating, totalRatings])
+
+                    ts = datetime.datetime.now().timestamp()
+                    writeCSV(f"tmp/yelp_{category}.csv", fields, rows)
+
+                    #lets try and extract next page url
+                    nextPageUrlElement = soup.find('a', attrs={'class': 'next-link'})
+                    if nextPageUrlElement is not None:
+                        url = nextPageUrlElement['href']
+                        time.sleep(2)
+                        scrapeYelpDirectory(url, category)
+
+                except Exception as e:
+                    error = e
+                    pass
+
+
+# url = "https://www.topratedlocal.com/philadelphia-pa-usa/plumbers-near-me"
+# scrapeTopRatedDirectory(url, 'plumber)
+url = "https://www.yelp.com/search?find_desc=Plumbers&find_loc=Philadelphia%2C%20PA"
+scrapeYelpDirectory(url, 'plumber')
