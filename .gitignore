@@ -5,3 +5,4 @@ venv-*
 *.*-workspace
 __pycache__
 .history
+tmp/
