@@ -31,3 +31,6 @@ class Scraper:
 
     def scrapeReviews(self, url):
         return self.scraper_client.scrapeReviews(url)
+
+    def scrapeImages(self, url):
+        return self.scraper_client.scrapeImages(url)
