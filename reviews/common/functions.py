@@ -1,4 +1,9 @@
+import os
+import pathlib
+import csv
 from datetime import date, timedelta
+from pathlib import Path
+from csv import writer
 
 
 def convertStringDate2Date(dateStr):
@@ -61,3 +66,20 @@ def reviewsCleanup(self, reviewJSON):
     result = result.replace(',"@type":"PostalAddress"', '')
 
     return result
+
+
+def writeCSV(fileNamePath, fields, rows):
+    try:
+        append = False
+        file = Path(fileNamePath)
+        if file.is_file():
+            append = True
+
+        with open(fileNamePath, 'a') as f:
+            write = csv.writer(f)
+            if append is False:
+                write.writerow(fields)
+            write.writerows(rows)
+    except Exception as e:
+        error = e
+        pass

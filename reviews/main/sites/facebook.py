@@ -247,7 +247,7 @@ class Facebook:
                             if userRatingInnerObj.text.find("doesn't") != -1:
                                 finaReview['rating'] = 0
                             elif userRatingInnerObj.text.find("recommends") != -1:
-                                finaReview['rating'] = 1
+                                finaReview['rating'] = 5
 
                     # Published time
                     reviewPublishedTimeOuterObj = review.find("div", attrs={"data-testid": "story-subtitle"})
@@ -314,7 +314,7 @@ class Facebook:
 
         return result
 
-    def scrapeURL(self, url):
+    def scrapeReviews(self, url):
         try:
             self.siteUrl = self._cleanupUrl(url)
 

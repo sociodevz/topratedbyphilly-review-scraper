@@ -5,6 +5,8 @@ import os
 import time
 import traceback
 import logging
+import datetime
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -18,6 +20,7 @@ from bs4 import BeautifulSoup
 from reviews.common.config import config
 from reviews.main.reviews_formatter import ReviewFormatter
 from reviews.common.logger import logger
+from reviews.common.functions import *
 
 class Googlemaps:
 
@@ -334,7 +337,177 @@ class Googlemaps:
         strOut = str.replace('\r', ' ').replace('\n', ' ').replace('\t', ' ')
         return strOut
 
-    def scrapeURL(self, url):
+    def scrapeGoogleLocalDirectory(headersArr, refererUrl, url, category):
+        path = f"{config.get('project_physical_root_path')}chromedriver"
+        options = Options()
+        options.add_argument('--no-sandbox')
+        options.headless = config.get('chrome_headless_mode')
+        browser = webdriver.Chrome(path, options=options)
+        try:
+            browser.get(url)
+            time.sleep(5)
+            bodyHtml = str(browser.page_source).encode('utf8').decode('unicode_escape')
+            bodyHtml = bodyHtml.replace("\\u0026","&").replace("\\u003d","=").replace("\\n",'\n')
+            browser.quit()
+
+            # with open('tmp/googledirectory.html') as file:
+            #         resultArr = {
+            #             'code': 200,
+            #             'body': file.read()
+            #         }
+            # bodyHtml = resultArr['body']
+
+            soup = BeautifulSoup(bodyHtml, 'lxml')
+            if soup is not None:
+                # save memory quit browser
+                companyNameArr = []
+                companyUrlArr = []
+                companyRatingArr = []
+                companyDetailsArr = []
+
+                regex = r'\["(https://www.google.com/localservices/provider\?cid=.*?)",null,null,"(.*?)\\nPlumber\\nStar rating: (.*?)"'
+                matches = re.findall(regex, bodyHtml)
+                if len(matches) > 0:
+                    for match in matches:
+                        companyNameArr.append(match[1])
+                        companyUrlArr.append(match[0])
+                        companyRatingArr.append(match[2])
+
+                reviewCountOuterList = soup.findAll('div', attrs={'class': 'zFYXkc'})
+                if reviewCountOuterList is not None:
+                    for reviewCountOuterObj in reviewCountOuterList:
+                        reviewCountList = reviewCountOuterObj.findAll('span', attrs={'class': 'rBK1zb'})
+                        if reviewCountList is not None:
+                            for reviewCountObj in reviewCountList:
+                                reviewCountSpanList = reviewCountObj.findAll('span')
+                                for reviewCountSpanObj in reviewCountSpanList:
+                                    value = reviewCountSpanObj.text.strip()
+                                    try:
+                                        int(value)
+                                        companyDetailsArr.append(float(value))
+                                        continue
+                                    except ValueError:
+                                        pass
+
+                fields = ['name', 'url', 'rating', 'total_ratings']
+                rows = []
+
+                for (name, landingUrl, rating, totalRatings) in zip(companyNameArr, companyUrlArr, companyRatingArr, companyDetailsArr):
+                    rows.append([name, landingUrl, rating, totalRatings])
+
+                ts = datetime.datetime.now().timestamp()
+                writeCSV(f"tmp/googlelocal_{category}.csv", fields, rows)
+
+
+        except Exception as e:
+            print(e)
+            browser.quit()
+
+
+    def scrapeGoogleDirectory(headersArr, refererUrl, url, category, skipToPageNum=None):
+        newDataAvailable = True
+        path = f"{config.get('project_physical_root_path')}chromedriver"
+        options = Options()
+        options.add_argument('--no-sandbox')
+        options.headless = config.get('chrome_headless_mode')
+        browser = webdriver.Chrome(path, options=options)
+
+        browser.get(url)
+        time.sleep(10)
+        if skipToPageNum is not None:
+            if skipToPageNum > 10:
+                loopsNeeded = math.floor(skipToPageNum / 10)
+                for i in range(1, loopsNeeded+1):
+                    nextPageUrlElement = browser.find_element_by_css_selector("[aria-label='Page " + str(i * 10) + "']")
+                    if nextPageUrlElement is not None:
+                        ActionChains(browser).move_to_element(nextPageUrlElement).click(nextPageUrlElement).perform()
+                        time.sleep(5)
+
+            nextPageUrlElement = browser.find_element_by_css_selector("[aria-label='Page " + str(skipToPageNum) + "']")
+            if nextPageUrlElement is not None:
+                ActionChains(browser).move_to_element(nextPageUrlElement).click(nextPageUrlElement).perform()
+                time.sleep(5)
+
+        def startScraping(skipToPage=None):
+            global newDataAvailable
+            try:
+                newDataAvailable = False
+                bodyHtml = str(browser.page_source).encode('utf8').decode('unicode_escape')
+                bodyHtml = bodyHtml.replace("\\u0026","&").replace("\\u003d","=").replace("\\n",'\n')
+
+                soup = BeautifulSoup(bodyHtml, 'lxml')
+                if soup is not None:
+                    # save memory quit browser
+                    companyNameArr = []
+                    companyUrlArr = []
+                    companyRatingArr = []
+                    companyDetailsArr = []
+
+                    #need to find all company links
+                    companyLinkElementList = browser.find_elements_by_class_name("rllt__link")
+                    if companyLinkElementList is not None:
+                        for companyLinkElement in companyLinkElementList:
+                            ActionChains(browser).move_to_element(companyLinkElement).click(companyLinkElement).perform()
+                            time.sleep(5)
+
+                            bodyHtml = str(browser.page_source).encode('utf8').decode('unicode_escape')
+                            bodyHtml = bodyHtml.replace("\\u0026","&").replace("\\u003d","=").replace("\\n",'\n')
+                            soup = BeautifulSoup(bodyHtml, 'lxml', parse_only=SoupStrainer('div', attrs={'class': 'kp-header'}))
+                            if soup is not None:
+                                companyNameElement = soup.find('h2', attrs={'data-attrid': 'title'})
+                                if companyNameElement is not None:
+                                    companyNameSpan = companyNameElement.find('span')
+                                    if companyNameSpan is not None:
+                                        companyNameArr.append(companyNameSpan.text.strip())
+                                    else:
+                                        companyNameArr.append(companyNameElement.text.strip())
+
+                                companyWebsite = 'NA'
+                                companyUrlElement = soup.find('a', attrs={'class': 'ab_button'})
+                                if companyUrlElement is not None:
+                                    companyWebsite = companyUrlElement['href'].strip()
+                                companyUrlArr.append(companyWebsite)
+
+                                companyRatedText = 0
+                                companyTotalReviewsText = 0
+                                companyDetailsElement = soup.find('div', attrs={'data-attrid': 'kc:/local:lu attribute list'})
+                                if companyDetailsElement is not None:
+                                    companyRatingSpan = companyDetailsElement.find('span', attrs={'aria-hidden': 'true'})
+                                    if companyRatingSpan is not None:
+                                        companyRatedText = float(companyRatingSpan.text.strip())
+
+                                    companyReviewCountWrapper = companyDetailsElement.find('a')
+                                    if companyReviewCountWrapper is not None:
+                                        companyReviewCountSpan = companyReviewCountWrapper.find('span')
+                                        if companyReviewCountSpan is not None:
+                                            companyTotalReviewsText = int(companyReviewCountSpan.text.replace('reviews', '').replace('review', '').replace('Google', '').replace(',', '').strip())
+
+                                companyRatingArr.append(companyRatedText)
+                                companyDetailsArr.append(companyTotalReviewsText)
+
+                    fields = ['name', 'url', 'rating', 'total_ratings']
+                    rows = []
+
+                    for (name, landingUrl, rating, totalRatings) in zip(companyNameArr, companyUrlArr, companyRatingArr, companyDetailsArr):
+                        rows.append([name, landingUrl, rating, totalRatings])
+
+                    ts = datetime.datetime.now().timestamp()
+                    writeCSV(f"tmp/googlesearch_{category}.csv", fields, rows)
+
+                # find pagination
+                nextPageUrlElement = browser.find_element_by_id('pnnext')
+                if nextPageUrlElement is not None:
+                    ActionChains(browser).move_to_element(nextPageUrlElement).click(nextPageUrlElement).perform()
+                    time.sleep(5)
+                    newDataAvailable = True
+            except Exception as e:
+                print(e)
+                #browser.quit()
+
+        while newDataAvailable is True:
+            startScraping()
+
+    def scrapeReviews(self, url):
         try:
             self.browser.get(url)
             time.sleep(5)
