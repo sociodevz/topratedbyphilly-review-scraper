@@ -4,6 +4,7 @@ import json
 import math
 import re
 import os
+import time
 from random import randint, random, randrange
 from time import sleep
 from reviews.common.network import Network
@@ -11,6 +12,8 @@ from reviews.common.config import config
 from reviews.main.reviews_formatter import ReviewFormatter
 from reviews.common.functions import *
 from reviews.common.logger import logger
+from reviews.common.useragents import UserAgent
+
 
 class Bbb:
 
@@ -25,6 +28,70 @@ class Bbb:
         print(f'Initalized {self.platformName} Engine')
         logger.info(f'Initalized {self.platformName} Engine')
         pass
+
+    def scrapeListings(self, url, csvFileNamePath):
+        url = "https://www.bbb.org/search?find_country=USA&find_latlng=39.989654%2C-75.148976&find_loc=Philadelphia%2C%20PA&find_text=Plumber&page=1&sort=Relevance&touched=1"
+        userAgent = UserAgent()
+        headersArr = userAgent.getRandom()
+
+        headersArr['referer'] = 'https://www.bbb.org'
+        headersArr['authority'] = 'www.bbb.org'
+        scrape = True
+
+        while scrape is True:
+            scrape = False
+
+            # we need to add api so that we get json
+            url = url.replace('https://www.bbb.org/search', 'https://www.bbb.org/api/search')
+            headersArr['path'] = url.replace('https://www.bbb.org', '')
+
+            resultArr = Network.fetch(Network.GET, url, headersArr)
+
+            if resultArr['code'] == 200:
+                jsonStr = resultArr['body']
+                jsonArr = json.loads(jsonStr)
+
+                if len(jsonArr) > 0:
+                    companyNameArr = []
+                    companyUrlArr = []
+                    companyRatingArr = []
+                    companyDetailsArr = []
+
+                    try:
+                        for result in jsonArr['results']:
+                            businessName = result['businessName'].strip()
+                            companyNameArr.append(result['businessName'].strip().replace('<em>', '').replace('</em>', ''))
+                            companyUrlArr.append(result['reportUrl'].strip())
+                            companyRatingArr.append(result['rating'])
+                            companyDetailsArr.append(result['score'])
+
+                        fields = ['name', 'url', 'rating', 'rating_score']
+                        rows = []
+
+                        for (name, landingUrl, rating, totalRatings) in zip(companyNameArr, companyUrlArr, companyRatingArr, companyDetailsArr):
+                            rows.append([name, landingUrl, rating, totalRatings])
+
+                        writeCSV(csvFileNamePath, fields, rows)
+
+                        # lets try and extract next page url
+                        currentPageNum = jsonArr['page']
+                        totalPages = jsonArr['totalPages']
+                        if currentPageNum < totalPages:
+                            headersArr['referer'] = url.replace('api/', '')
+                            scrape = True
+
+                            regex = r"&page=(.*?)&"
+                            nextPageNumber = currentPageNum + 1
+                            subst = f"&page={nextPageNumber}&"
+                            url = nextUrl = re.sub(regex, subst, url, 0, re.MULTILINE)
+                            time.sleep(3)
+                    except Exception as e:
+                        error = e
+                        print(e)
+                        pass
+
+    def scrapeImages(self, url, imageSavePath):
+        return 'Not yet implemented'
 
     def scrapeReviews(self, url):
         returnArr = []
