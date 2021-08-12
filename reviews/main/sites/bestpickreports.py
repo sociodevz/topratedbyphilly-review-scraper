@@ -31,7 +31,7 @@ class Bestpickreports:
         logger.info(f'Initalized {self.platformName} Engine')
         pass
 
-    def scrapeURL(self, url):
+    def scrapeReviews(self, url):
         returnArr = []
 
         self.siteUrl = url

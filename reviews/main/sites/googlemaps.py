@@ -334,7 +334,7 @@ class Googlemaps:
         strOut = str.replace('\r', ' ').replace('\n', ' ').replace('\t', ' ')
         return strOut
 
-    def scrapeURL(self, url):
+    def scrapeReviews(self, url):
         try:
             self.browser.get(url)
             time.sleep(5)

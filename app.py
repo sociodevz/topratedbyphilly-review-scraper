@@ -14,7 +14,7 @@ def scrape():
     engine = request.form.get('engine').title()
     url = request.form.get('url')
     scraper = Scraper(engine)
-    result = scraper.scrapeURL(url)
+    result = scraper.scrapeReviews(url)
     response = {
         'result': {
             'success': True,

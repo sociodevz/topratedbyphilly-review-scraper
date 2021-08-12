@@ -314,7 +314,7 @@ class Facebook:
 
         return result
 
-    def scrapeURL(self, url):
+    def scrapeReviews(self, url):
         try:
             self.siteUrl = self._cleanupUrl(url)
 
