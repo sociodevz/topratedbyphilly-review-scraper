@@ -35,7 +35,7 @@ class Topratedlocal:
 
         return returnArr
 
-    def scrapeDirectory(self, url, category):
+    def scrapeDirectory(self, url, csvFileNamePath):
         resultArr = Network.fetch(Network.GET, url)
 
         if resultArr['code'] == 200:
@@ -86,5 +86,5 @@ class Topratedlocal:
                     for (name, url, rating, detailedRating) in zip(companyNameArr, companyUrlArr, companyRatingArr, companyDetailsArr):
                         rows.append([name, url, rating, detailedRating[0], detailedRating[1], detailedRating[2], detailedRating[3]])
 
-                    writeCSV(f"tmp/topratedlocal_{category}.csv", fields, rows)
+                    writeCSV(csvFileNamePath, fields, rows)
 
