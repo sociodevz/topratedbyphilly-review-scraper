@@ -26,11 +26,11 @@ class Scraper:
         self.scraper_client = getattr(sys.modules[__name__], reviewSite)()
         pass
 
-    def scrapeListings(self, url):
-        return self.scraper_client.scrapeListings(url)
+    def scrapeListings(self, url, csvFileNamePath):
+        return self.scraper_client.scrapeListings(url, csvFileNamePath)
 
     def scrapeReviews(self, url):
         return self.scraper_client.scrapeReviews(url)
 
-    def scrapeImages(self, url):
-        return self.scraper_client.scrapeImages(url)
+    def scrapeImages(self, url, imageSavePath):
+        return self.scraper_client.scrapeImages(url, imageSavePath)
