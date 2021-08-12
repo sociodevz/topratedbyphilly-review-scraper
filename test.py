@@ -1,5 +1,7 @@
 import os
 import pathlib
+import traceback
+from bs4.element import SoupStrainer
 from reviews.common.useragents import UserAgent
 from typing import Iterable
 import requests
@@ -10,6 +12,8 @@ import json
 import html
 import time
 import datetime
+import math
+import wget
 from pathlib import Path
 from hashlib import sha256
 from http.cookiejar import MozillaCookieJar
@@ -26,6 +30,161 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 
+def scrapeYelpProjectImages():
+    PATH = f"{config.get('project_physical_root_path')}chromedriver"
+    options = Options()
+    options.add_argument('--no-sandbox')
+    options.headless = config.get('chrome_headless_mode')
+    browser = webdriver.Chrome(PATH, options=options)
+
+    urlsList = [
+        'https://www.yelp.com/biz_photos/green-pest-solutions-philadelphia',
+        'https://www.yelp.com/biz_photos/aptive-environmental-bensalem',
+        'https://www.yelp.com/biz_photos/orkin-bensalem-3',
+        'https://www.yelp.com/biz_photos/dynamite-pest-control-philadelphia',
+        'https://www.yelp.com/biz_photos/city-and-suburbs-pest-control-company-philadelphia-6',
+        'https://www.yelp.com/biz_photos/prodigy-pest-solutions-ridley-park-2',
+        'https://www.yelp.com/biz_photos/harpoon-pest-solutions-philadelphia',
+        'https://www.yelp.com/biz_photos/evans-pest-control-philadelphia-3',
+        'https://www.yelp.com/biz_photos/township-pest-control-warrington',
+        'https://www.yelp.com/biz_photos/live-by-the-brush-morrisville',
+        'https://www.yelp.com/biz_photos/angelos-cleaning-phoenixville-3',
+        'https://www.yelp.com/biz_photos/kc-carpet-and-upholstery-cleaners-philadelphia-2',
+        'https://www.yelp.com/biz_photos/thomas-carpet-cleaners-newtown-square',
+        'https://www.yelp.com/biz_photos/neo-carpet-cleaning-philadelphia',
+        'https://www.yelp.com/biz_photos/zakian-rug-cleaning-philadelphia',
+        'https://www.yelp.com/biz_photos/a1-sparkles-cleaning-bridgeport-2',
+        'https://www.yelp.com/biz_photos/barnes-and-young-carpet-cleaning-philadelphia',
+        'https://www.yelp.com/biz_photos/eds-cleaning-service-philadelphia-2',
+    ]
+
+    for url in urlsList:
+
+        try:
+            if url.find('biz_photos') == -1:
+                url = url.replace('https://www.yelp.com/biz/', 'https://www.yelp.com/biz_photos/')
+
+            nextPageExists = True
+            browser.get(url)
+            time.sleep(5)
+            cntr = 1
+            while nextPageExists is True:
+                nextPageExists = False
+                # val = input("Continue:")
+
+                websiteName = None
+                soup = BeautifulSoup(browser.page_source, 'lxml')
+                titleElement = soup.find('title')
+                websiteName = titleElement.text.replace('Photos for ', '').replace(' - Yelp', '').strip()
+
+                projectName = 'All'
+                projectNamePath = f"tmp/images/yelp/{websiteName}/{projectName}"
+                Path(projectNamePath).mkdir(parents=True, exist_ok=True)
+                images = soup.findAll('img', attrs={'class': 'photo-box-img'})
+                if images is not None:
+                    for image in images:
+                        timestamp = str(time.time()).replace('.', '')
+                        imageUrl = re.sub(r"bphoto/(.*?)/(.*)\.(.*)", "bphoto/\\1/o.\\3", image['src'])
+                        try:
+                            fileNamePath = f"{projectNamePath}/{cntr}.jpg"
+                            image_filename = wget.download(imageUrl, out=fileNamePath)
+                            cntr += 1
+                        except Exception as e:
+                            pass
+
+                try:
+                    element = browser.find_element_by_class_name("next")
+                    if element is not None:
+                        ActionChains(browser).move_to_element(element).click(element).perform()
+                        time.sleep(5)
+                        nextPageExists = True
+                except Exception as e:
+                    pass
+        except Exception as e:
+            tb = traceback.format_exc()
+            print(tb)
+            error = e
+            print(error)
+            #browser.quit()
+            pass
+
+
+scrapeYelpProjectImages()
+
+
+def scrapeHouzzProjectImages():
+    PATH = f"{config.get('project_physical_root_path')}chromedriver"
+    options = Options()
+    options.add_argument('--no-sandbox')
+    options.headless = config.get('chrome_headless_mode')
+
+    urlsList = [
+        'https://www.houzz.com/pro/service5750/martella-electric',
+        'https://www.houzz.com/pro/gen3electric/generation-3-electric-inc',
+        'https://www.houzz.com/pro/debbie8614/jdv-electric',
+        'https://www.houzz.com/pro/webuser-865513104/thomas-edison-electric',
+        'https://www.houzz.com/pro/kbelectricpa/kb-electric-llc',
+        'https://www.houzz.com/pro/allstarelectrical10/all-star-electrical-services-llc',
+        'https://www.houzz.com/pro/kowallelectric/kowall-electric',
+        'https://www.houzz.com/pro/giannonehvac/joseph-giannone-plumbing-heating-air-conditioning',
+        'https://www.houzz.com/pro/info596258/boyle-energy',
+        'https://www.houzz.com/pro/jhowy73/air-done-right',
+        'https://www.houzz.com/pro/livebythebrush/live-by-the-brush-llc-professional-carpet-cleaners',
+        'https://www.houzz.com/pro/webuser-208720602/kc-carpet-cleaning-upholstery-cleaning'
+    ]
+
+    for url in urlsList:
+        browser = webdriver.Chrome(PATH, options=options)
+
+        try:
+            originalUrl = url
+            browser.get(originalUrl)
+            time.sleep(5)
+            val = input("Continue:")
+
+            websiteName = None
+            soup = BeautifulSoup(browser.page_source, 'lxml')
+            websiteNameElement = soup.find('meta', attrs={'name': 'author'})
+            websiteName = websiteNameElement['content'].strip()
+
+            projects = soup.findAll('a', attrs={'data-testid': 'image-card-link'})
+            if projects is not None:
+                for project in projects:
+                    browser1 = webdriver.Chrome(PATH, options=options)
+                    browser1.get(project['href'])
+                    time.sleep(5)
+
+                    imageArr = []
+                    soup = BeautifulSoup(browser1.page_source, 'lxml')
+                    projectNameElement = soup.find('h1', attrs={'class': 'header-1'})
+                    if projectNameElement is not None:
+                        projectName = projectNameElement.text.strip()
+                        projectNamePath = f"tmp/images/{websiteName}/{projectName}"
+                        Path(projectNamePath).mkdir(parents=True, exist_ok=True)
+
+                        images = soup.findAll('source')
+                        if images is not None:
+                            for image in images:
+                                imageUrl = image['srcset'].replace('w378', 'w1024').replace('h378', 'h1024')
+                                try:
+                                    image_filename = wget.download(imageUrl, out=projectNamePath)
+                                except Exception as e:
+                                    pass
+                    browser1.quit()
+            browser.quit()
+        except Exception as e:
+            tb = traceback.format_exc()
+            print(tb)
+            error = e
+            print(error)
+            browser.quit()
+            browser1.quit()
+            pass
+
+
+
+
+exit()
 def writeCSV(fileNamePath, fields, rows):
     try:
         append = False
@@ -309,7 +468,8 @@ def scrapeBBBDirectory(headersArr, refererUrl, url, category):
                 print(e)
                 pass
 
-def scrapeGoogleDirectory(headersArr, refererUrl, url, category):
+
+def scrapeGoogleLocalDirectory(headersArr, refererUrl, url, category):
     path = f"{config.get('project_physical_root_path')}chromedriver"
     options = Options()
     options.add_argument('--no-sandbox')
@@ -376,6 +536,117 @@ def scrapeGoogleDirectory(headersArr, refererUrl, url, category):
         browser.quit()
 
 
+def scrapeGoogleDirectory(headersArr, refererUrl, url, category, skipToPageNum=None):
+    newDataAvailable = True
+    path = f"{config.get('project_physical_root_path')}chromedriver"
+    options = Options()
+    options.add_argument('--no-sandbox')
+    options.headless = config.get('chrome_headless_mode')
+    browser = webdriver.Chrome(path, options=options)
+
+    browser.get(url)
+    time.sleep(10)
+    if skipToPageNum is not None:
+        if skipToPageNum > 10:
+            loopsNeeded = math.floor(skipToPageNum / 10)
+            for i in range(1, loopsNeeded+1):
+                nextPageUrlElement = browser.find_element_by_css_selector("[aria-label='Page " + str(i * 10) + "']")
+                if nextPageUrlElement is not None:
+                    ActionChains(browser).move_to_element(nextPageUrlElement).click(nextPageUrlElement).perform()
+                    time.sleep(5)
+
+        nextPageUrlElement = browser.find_element_by_css_selector("[aria-label='Page " + str(skipToPageNum) + "']")
+        if nextPageUrlElement is not None:
+            ActionChains(browser).move_to_element(nextPageUrlElement).click(nextPageUrlElement).perform()
+            time.sleep(5)
+
+    def startScraping(skipToPage=None):
+        global newDataAvailable
+        try:
+            newDataAvailable = False
+            bodyHtml = str(browser.page_source).encode('utf8').decode('unicode_escape')
+            bodyHtml = bodyHtml.replace("\\u0026","&").replace("\\u003d","=").replace("\\n",'\n')
+
+            # with open('tmp/google1.html') as file:
+            #     resultArr = {
+            #         'code': 200,
+            #         'body': file.read()
+            #     }
+            # bodyHtml = resultArr['body']
+
+            soup = BeautifulSoup(bodyHtml, 'lxml')
+            if soup is not None:
+                # save memory quit browser
+                companyNameArr = []
+                companyUrlArr = []
+                companyRatingArr = []
+                companyDetailsArr = []
+
+                #need to find all company links
+                companyLinkElementList = browser.find_elements_by_class_name("rllt__link")
+                if companyLinkElementList is not None:
+                    for companyLinkElement in companyLinkElementList:
+                        ActionChains(browser).move_to_element(companyLinkElement).click(companyLinkElement).perform()
+                        time.sleep(5)
+
+                        bodyHtml = str(browser.page_source).encode('utf8').decode('unicode_escape')
+                        bodyHtml = bodyHtml.replace("\\u0026","&").replace("\\u003d","=").replace("\\n",'\n')
+                        soup = BeautifulSoup(bodyHtml, 'lxml', parse_only=SoupStrainer('div', attrs={'class': 'kp-header'}))
+                        if soup is not None:
+                            companyNameElement = soup.find('h2', attrs={'data-attrid': 'title'})
+                            if companyNameElement is not None:
+                                companyNameSpan = companyNameElement.find('span')
+                                if companyNameSpan is not None:
+                                    companyNameArr.append(companyNameSpan.text.strip())
+                                else:
+                                    companyNameArr.append(companyNameElement.text.strip())
+
+                            companyWebsite = 'NA'
+                            companyUrlElement = soup.find('a', attrs={'class': 'ab_button'})
+                            if companyUrlElement is not None:
+                                companyWebsite = companyUrlElement['href'].strip()
+                            companyUrlArr.append(companyWebsite)
+
+                            companyRatedText = 0
+                            companyTotalReviewsText = 0
+                            companyDetailsElement = soup.find('div', attrs={'data-attrid': 'kc:/local:lu attribute list'})
+                            if companyDetailsElement is not None:
+                                companyRatingSpan = companyDetailsElement.find('span', attrs={'aria-hidden': 'true'})
+                                if companyRatingSpan is not None:
+                                    companyRatedText = float(companyRatingSpan.text.strip())
+
+                                companyReviewCountWrapper = companyDetailsElement.find('a')
+                                if companyReviewCountWrapper is not None:
+                                    companyReviewCountSpan = companyReviewCountWrapper.find('span')
+                                    if companyReviewCountSpan is not None:
+                                        companyTotalReviewsText = int(companyReviewCountSpan.text.replace('reviews', '').replace('review', '').replace('Google', '').replace(',', '').strip())
+
+                            companyRatingArr.append(companyRatedText)
+                            companyDetailsArr.append(companyTotalReviewsText)
+
+                fields = ['name', 'url', 'rating', 'total_ratings']
+                rows = []
+
+                for (name, landingUrl, rating, totalRatings) in zip(companyNameArr, companyUrlArr, companyRatingArr, companyDetailsArr):
+                    rows.append([name, landingUrl, rating, totalRatings])
+
+                ts = datetime.datetime.now().timestamp()
+                writeCSV(f"tmp/googlesearch_{category}.csv", fields, rows)
+
+            # find pagination
+            nextPageUrlElement = browser.find_element_by_id('pnnext')
+            if nextPageUrlElement is not None:
+                ActionChains(browser).move_to_element(nextPageUrlElement).click(nextPageUrlElement).perform()
+                time.sleep(5)
+                newDataAvailable = True
+        except Exception as e:
+            print(e)
+            #browser.quit()
+
+    while newDataAvailable is True:
+        startScraping()
+
+
 userAgent = UserAgent()
 headersArr = userAgent.getRandom()
 
@@ -385,11 +656,14 @@ headersArr = userAgent.getRandom()
 #url = "https://www.yelp.com/search?find_desc=Windows%20and%20Doors&find_loc=Philadelphia%2C%20PA"
 #scrapeYelpDirectory(headersArr, 'https://www.yelp.com', url, 'windowsdoors')
 
-#url = "https://www.buildzoom.com/philadelphia-pa/windows-and-doors"
-#scrapeBuildzoomDirectory(headersArr, 'https://www.buildzoom.com/', url, 'windows-and-doors')
+url = "https://www.buildzoom.com/philadelphia-pa/windows-and-doors"
+scrapeBuildzoomDirectory(headersArr, 'https://www.buildzoom.com/', url, 'windows-and-doors')
 
 #url = "https://www.bbb.org/api/search?find_country=USA&find_latlng=39.989654%2C-75.148976&find_loc=Philadelphia%2C%20PA&find_text=windows%20and%20doors&page=1&sort=Distance"
-#scrapeBBBDirectory(headersArr, 'https://www.bbb.org', url, 'windows-doors')
+scrapeBBBDirectory(headersArr, 'https://www.bbb.org', url, 'windows-doors')
+
+#url = "https://www.google.com/search?tbm=lcl&q=windows+and+doors+replacement+companies+in+philadelphia&spell=1&sa=X&ved=2ahUKEwiUsIfJ3ZTyAhXRyIsBHe4JDsoQBSgAegQIAxAm&biw=1366&bih=657&dpr=1#rlfi=hd:;si:;mv:[[40.1328331,-74.9924552],[39.902724299999996,-75.18228760000001]];tbs:lrf:!1m4!1u3!2m2!3m1!1e1!1m4!1u2!2m2!2m1!1e1!2m1!1e2!2m1!1e3!3sIAE,lf:1,lf_ui:14"
+#scrapeGoogleLocalDirectory(headersArr, 'https://www.google.com/', url, 'windows-doors')
 
 url = "https://www.google.com/search?tbm=lcl&q=windows+and+doors+replacement+companies+in+philadelphia&spell=1&sa=X&ved=2ahUKEwiUsIfJ3ZTyAhXRyIsBHe4JDsoQBSgAegQIAxAm&biw=1366&bih=657&dpr=1#rlfi=hd:;si:;mv:[[40.1328331,-74.9924552],[39.902724299999996,-75.18228760000001]];tbs:lrf:!1m4!1u3!2m2!3m1!1e1!1m4!1u2!2m2!2m1!1e1!2m1!1e2!2m1!1e3!3sIAE,lf:1,lf_ui:14"
-scrapeGoogleDirectory(headersArr, 'https://www.google.com/', url, 'windows-doors')
+scrapeGoogleDirectory(headersArr, 'https://www.google.com/', url, 'windows-door', None)
