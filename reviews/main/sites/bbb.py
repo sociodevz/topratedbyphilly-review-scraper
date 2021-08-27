@@ -13,9 +13,10 @@ from reviews.main.reviews_formatter import ReviewFormatter
 from reviews.common.functions import *
 from reviews.common.logger import logger
 from reviews.common.useragents import UserAgent
+from reviews.main.scraper_interface import ScraperInterface
 
 
-class Bbb:
+class Bbb(ScraperInterface):
 
     platformName = None
     siteUrl = None
