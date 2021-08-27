@@ -12,9 +12,10 @@ from reviews.main.reviews_formatter import ReviewFormatter
 from reviews.common.functions import *
 from reviews.common.logger import logger
 from bs4 import BeautifulSoup
+from reviews.main.scraper_interface import ScraperInterface
 
 
-class Topratedlocal:
+class Topratedlocal(ScraperInterface):
 
     platformName = None
     siteUrl = None
