@@ -153,7 +153,7 @@ class ReviewFormatter:
 
         return result
 
-    def _formatHouzzreview(self):
+    def _formatHouzzReview(self):
         result = self._getTemplate()
 
         result["id"] = self.reviewObj["reviewId"]
@@ -163,6 +163,11 @@ class ReviewFormatter:
         result["review"]["rating"] = self.reviewObj["rating"]
         result["review"]["text"] = self.reviewObj["body"]
         result["date"] = datetime.fromtimestamp((self.reviewObj['created'])).isoformat()
+
+        if type(self.reviewObj['comments']) is list:
+            for response in self.reviewObj['comments']:
+                result["misc"]["review"]["business_response"]["text"] = response["htmlBody"]
+
         result["dump"] = self.reviewObj
 
         return result
