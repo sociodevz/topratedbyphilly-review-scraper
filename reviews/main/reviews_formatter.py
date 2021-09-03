@@ -2,6 +2,8 @@ import dateparser
 import pytz
 from datetime import datetime
 from reviews.common.functions import convertStringDate2Date
+from reviews.common.logger import logger
+
 
 class ReviewFormatter:
     platform = None
@@ -93,7 +95,14 @@ class ReviewFormatter:
 
             result["review"]["rating"] = self.reviewObj["reviewStarRating"]
             if self.reviewObj['hasExtendedText'] is True:
-                result["review"]["text"] = self.reviewObj["extendedText"]["text"]
+                if type(self.reviewObj['extendedText']) is list:
+                    for response in self.reviewObj['extendedText']:
+                        if response['isCustomer'] is True:
+                            result["review"]["text"] = response["text"]
+                        elif response['isBusiness'] is True:
+                            result["misc"]["review"]["business_response"]["text"] = response["text"]
+                else:
+                    result["review"]["text"] = self.reviewObj["extendedText"]["text"]
             else:
                 result["review"]["text"] = self.reviewObj["text"]
             result["date"] = dateparser.parse(f"{self.reviewObj['date']['year']}-{self.reviewObj['date']['month']}-{self.reviewObj['date']['day']}").isoformat()
