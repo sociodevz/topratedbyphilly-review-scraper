@@ -23,6 +23,7 @@ from reviews.common.logger import logger
 from reviews.common.functions import *
 from reviews.main.scraper_interface import ScraperInterface
 
+
 class Googlemaps(ScraperInterface):
 
     platformName = None
@@ -528,3 +529,9 @@ class Googlemaps(ScraperInterface):
         self.browser.quit()
 
         return(self.location_data)
+
+    def scrapeListings(self, url):
+        pass
+
+    def scrapeImages(self, url, imageSavePath):
+        pass
