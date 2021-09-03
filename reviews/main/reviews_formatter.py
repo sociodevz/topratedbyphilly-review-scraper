@@ -166,7 +166,7 @@ class ReviewFormatter:
 
         if 'comments' in self.reviewObj and type(self.reviewObj['comments']) is list:
             for response in self.reviewObj['comments']:
-                result["misc"]["review"]["business_response"]["date"] = dateparser.fromtimestamp(response["created"]).isoformat()
+                result["misc"]["review"]["business_response"]["date"] = datetime.fromtimestamp(response["created"]).isoformat()
                 result["misc"]["review"]["business_response"]["text"] = response["htmlBody"]
 
         result["dump"] = self.reviewObj
