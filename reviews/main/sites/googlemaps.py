@@ -289,6 +289,9 @@ class Googlemaps(ScraperInterface):
                                     totalReviewsText = spanObj.text.replace('・', '')
                                     totalReviewsText = totalReviewsText.replace(' reviews', '')
                                     totalReviewsText = totalReviewsText.replace(' review', '')
+                                    totalReviewsText = totalReviewsText.replace('・', '')
+                                    totalReviewsText = totalReviewsText.replace('·', '')
+
                                     totalReviewsText = int(totalReviewsText.strip())
                                     finaReview['total_reviews'] = totalReviewsText
 
