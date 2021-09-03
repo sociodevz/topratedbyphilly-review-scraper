@@ -126,6 +126,10 @@ class ReviewFormatter:
         result["review"]["text"] = self.reviewObj["comment"]["text"]
         result["date"] = dateparser.parse(self.reviewObj['localizedDate']).isoformat()
 
+        if type(self.reviewObj['businessOwnerReplies']) is list:
+            for response in self.reviewObj['businessOwnerReplies']:
+                result["misc"]["review"]["business_response"]["text"] = response["comment"]
+
         result["dump"] = self.reviewObj
 
         return result
