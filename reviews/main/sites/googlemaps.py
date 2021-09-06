@@ -90,9 +90,22 @@ class Googlemaps(ScraperInterface):
 
         avg_rating = 0
         total_reviews = 0
+        name = None
         address = None
         phone_number = None
         website = None
+
+        try:
+            soup = BeautifulSoup(self.browser.page_source, 'lxml')
+            if soup is not None:
+                nameObjectOutter = soup.find(attrs={'class': re.compile('gm2-headline-5')})
+                if nameObjectOutter is not None:
+                    nameSpanObject = nameObjectOutter.findChild('span')
+                    if nameSpanObject is not None:
+                        name = nameSpanObject.text.strip()
+        except Exception as e:
+            logger.exception('Exception')
+            pass
 
         try:
             avg_rating = self.browser.find_element_by_class_name("section-star-array").get_attribute("aria-label")
@@ -134,7 +147,7 @@ class Googlemaps(ScraperInterface):
         try:
             self.location_data = {
                 "id": 0,
-                "name": None,
+                "name": name,
                 "telephone": phone_number,
                 "address": address,
                 "website": website,
