@@ -1,4 +1,4 @@
-from typing import Pattern
+from typing import List, Pattern
 import requests
 import sys
 import re
@@ -15,6 +15,7 @@ from reviews.main.reviews_formatter import ReviewFormatter
 from reviews.common.functions import *
 from reviews.common.logger import logger
 from reviews.main.scraper_interface import ScraperInterface
+#from reviews.main.review_object import Review
 
 
 class Angi(ScraperInterface):
@@ -102,6 +103,7 @@ class Angi(ScraperInterface):
 
         try:
             reviewFormatter = ReviewFormatter(self.platformName)
+            #reviews: List[Review]
 
             soup = BeautifulSoup(self.scrapedRawData, 'lxml')
             if soup is not None:
@@ -129,3 +131,10 @@ class Angi(ScraperInterface):
             pass
 
         return result
+
+    def scrapeListings(self, url, csvFileNamePath):
+        pass
+
+    def scrapeImages(self, url, imageSavePath):
+        pass
+
