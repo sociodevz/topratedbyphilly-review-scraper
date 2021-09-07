@@ -15,7 +15,7 @@ from reviews.main.reviews_formatter import ReviewFormatter
 from reviews.common.functions import *
 from reviews.common.logger import logger
 from reviews.main.scraper_interface import ScraperInterface
-from reviews.main.review_object import Review
+#from reviews.main.review_object import Review
 
 
 class Angi(ScraperInterface):
@@ -103,7 +103,7 @@ class Angi(ScraperInterface):
 
         try:
             reviewFormatter = ReviewFormatter(self.platformName)
-            reviews: List[Review]
+            #reviews: List[Review]
 
             soup = BeautifulSoup(self.scrapedRawData, 'lxml')
             if soup is not None:
