@@ -108,27 +108,90 @@ class Angi(ScraperInterface):
             soup = BeautifulSoup(self.scrapedRawData, 'lxml')
             if soup is not None:
                 reviewCategoriesObj = soup.find_all("span", id=lambda x: x and x.startswith('review-filter-pill-'))
-                for reviewFilterCategory in reviewCategoriesObj:
-                    categoryReviewCount = int(reviewFilterCategory['data-count'])
-                    categoryFilterId = int(reviewFilterCategory['data-key'])
+                if len(reviewCategoriesObj) > 0:
+                    for reviewFilterCategory in reviewCategoriesObj:
+                        categoryReviewCount = int(reviewFilterCategory['data-count'])
+                        categoryFilterId = int(reviewFilterCategory['data-key'])
 
-                    limitPerPage = 10
-                    for i in range(math.ceil(int(categoryReviewCount/limitPerPage))+1):
-                        offset = i * limitPerPage
-                        categoryReviewUrl = reviewBaseUrl.replace('OFFSET_NUMBER', str(offset)).replace('CATEGORY_ID', str(categoryFilterId))
+                        limitPerPage = 10
+                        for i in range(math.ceil(int(categoryReviewCount/limitPerPage))+1):
+                            offset = i * limitPerPage
+                            categoryReviewUrl = reviewBaseUrl.replace('OFFSET_NUMBER', str(offset)).replace('CATEGORY_ID', str(categoryFilterId))
 
-                        scrapedRawData = Network.fetch(Network.GET, categoryReviewUrl, self.siteHeaders)
-                        if(scrapedRawData['code'] == 200):
-                            reviewsRawData = json.loads(scrapedRawData['body'])
-                            if 'reviews' in reviewsRawData:
-                                if len(reviewsRawData['reviews']) > 0:
-                                    for review in reviewsRawData['reviews']:
-                                        formattedReview = reviewFormatter.format(review)
-                                        result.append(formattedReview)
-                            sleep(randrange(1, 3))
+                            scrapedRawData = Network.fetch(Network.GET, categoryReviewUrl, self.siteHeaders)
+                            if(scrapedRawData['code'] == 200):
+                                reviewsRawData = json.loads(scrapedRawData['body'])
+                                if 'reviews' in reviewsRawData:
+                                    if len(reviewsRawData['reviews']) > 0:
+                                        for review in reviewsRawData['reviews']:
+                                            formattedReview = reviewFormatter.format(review)
+                                            result.append(formattedReview)
+                                sleep(randrange(1, 3))
+                else:
+                    scrape = True
+
+                    while scrape is True:
+                        scrape = False
+                        reviewsDivObject = soup.findAll('div', attrs={'class': 'review-card'})
+                        if reviewsDivObject is not None:
+                            for reviewDiv in reviewsDivObject:
+                                reviewObj = {
+                                    'id': 0,
+                                    'ratings': [
+                                        {
+                                            'startRating': 0
+                                        },
+                                    ],
+                                    'reviewText': None,
+                                    'reportDate': None,
+                                    'retort': {
+                                        'text': None
+                                    }
+
+                                }
+
+                                ratingSpanObj = reviewDiv.find('span', attrs={'class': 'rating-number'})
+                                if ratingSpanObj is not None:
+                                    reviewObj["ratings"][0]["starRating"] = float(ratingSpanObj.text.strip())
+
+                                reviewPDate = reviewDiv.find('p', attrs={'class': 'review-card__report-date'})
+                                if reviewPDate is not None:
+                                    reviewObj['reportDate'] = reviewPDate.text.strip()
+
+                                reviewDivText = reviewDiv.find('div', attrs={'class': 'review-card__review-text'})
+                                if reviewDivText is not None:
+                                    reviewObj["reviewText"] = reviewDivText.text.strip()
+
+                                reviewDivBusinessResponse = reviewDiv.find('div', attrs={'class': 'review-card__service-provider-response'})
+                                if reviewDivBusinessResponse is not None:
+                                    reviewObj['retort']['text'] = reviewDivBusinessResponse.text.replace('Service Provider Response','').strip()
+
+                                formattedReview = reviewFormatter.format(reviewObj)
+                                result.append(formattedReview)
+
+                        sleep(randrange(1, 3))
+                        nextPageUrl = self._getNextPageUrl(soup)
+                        if nextPageUrl is not False:
+                            scrapedRawData = Network.fetch(Network.GET, nextPageUrl, self.siteHeaders)
+                            if(scrapedRawData['code'] == 200):
+                                soup = BeautifulSoup(scrapedRawData['body'], 'lxml')
+                                if soup is None:
+                                    return result
+                                else:
+                                    scrape = True
         except Exception as e:
             logger.exception('Exception')
             pass
+
+        return result
+
+    def _getNextPageUrl(self, soup: BeautifulSoup):
+        result = False
+
+        if soup is not None:
+            nextPageLinkObject = soup.find("a", attrs={'title': 'Next page of reviews'})
+            if nextPageLinkObject is not None:
+                result = f"https://www.angi.com{nextPageLinkObject['href']}"
 
         return result
 
