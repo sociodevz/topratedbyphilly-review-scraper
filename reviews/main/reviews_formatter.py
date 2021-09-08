@@ -212,21 +212,28 @@ class ReviewFormatter:
     def _formatAngiReview(self):
         result = self._getTemplate()
 
-        result["id"] = self.reviewObj["id"]
-        result["user"]["id"] = 0
-        result["user"]["name"] = 'Anonymous'
+        try:
+            result["id"] = self.reviewObj["id"]
+            result["user"]["id"] = 0
+            result["user"]["name"] = 'Anonymous'
 
-        result["review"]["rating"] = int(self.reviewObj["ratings"][0]["starRating"])
-        result["review"]["text"] = self.reviewObj["reviewText"]
-        result["date"] = dateparser.parse(self.reviewObj['reportDate']).isoformat()
+            if len(self.reviewObj["ratings"]) > 0:
+                for rating in self.reviewObj["ratings"]:
+                    if rating['ratingType'] == 'Overall':
+                        result["review"]["rating"] = int(rating["starRating"])
 
-        businessResponse = None
-        if 'retort' in self.reviewObj:
-            businessResponse = self.reviewObj['retort']['text']
-            result["misc"]["review"]["business_response"]["text"] = businessResponse
+            result["review"]["text"] = self.reviewObj["reviewText"]
+            result["date"] = dateparser.parse(self.reviewObj['reportDate']).isoformat()
 
-        result["dump"] = self.reviewObj
+            businessResponse = None
+            if 'retort' in self.reviewObj:
+                businessResponse = self.reviewObj['retort']['text']
+                result["misc"]["review"]["business_response"]["text"] = businessResponse
 
+            result["dump"] = self.reviewObj
+        except Exception as e:
+            logger.exception('Exception')
+            pass
         return result
 
     def _formatGafReview(self):

@@ -105,6 +105,7 @@ class Angi(ScraperInterface):
             reviewFormatter = ReviewFormatter(self.platformName)
             #reviews: List[Review]
 
+            self.siteHeaders['authority'] = 'www.angi.com'
             soup = BeautifulSoup(self.scrapedRawData, 'lxml')
             if soup is not None:
                 reviewCategoriesObj = soup.find_all("span", id=lambda x: x and x.startswith('review-filter-pill-'))
@@ -139,6 +140,7 @@ class Angi(ScraperInterface):
                                     'id': 0,
                                     'ratings': [
                                         {
+                                            'ratingType': 'Overall',
                                             'startRating': 0
                                         },
                                     ],
