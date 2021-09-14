@@ -352,6 +352,7 @@ class ReviewFormatter:
                 result["misc"]["review"]["business_response"]["date"] = datetime.fromtimestamp(self.reviewObj["review_response_date"], tz).isoformat()
                 result["misc"]["review"]["business_response"]["text"] = self.reviewObj["review_response"]
 
+            result["dump"] = self.reviewObj
         except Exception as e:
             logger.exception('Exception')
             pass
