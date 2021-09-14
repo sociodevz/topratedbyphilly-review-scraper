@@ -20,7 +20,7 @@ from reviews.common.network import Network
 from reviews.main.scraper_interface import ScraperInterface
 
 
-class Scraper():
+class Scraper(ScraperInterface):
     scraper_client = ''
 
     def __init__(self, reviewSite):
