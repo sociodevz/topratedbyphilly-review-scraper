@@ -4,6 +4,7 @@ import importlib
 from reviews.common.network import Network
 from reviews.main.scraper_interface import ScraperInterface
 from reviews.common.logger import logger
+from reviews.main.sites import *
 
 
 class Scraper(ScraperInterface):
