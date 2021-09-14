@@ -83,3 +83,19 @@ def writeCSV(fileNamePath, fields, rows):
     except Exception as e:
         error = e
         pass
+
+
+def getOfflineFile(url):
+    result = None
+
+    try:
+        filePath = os.path.realpath(__file__)
+        currentFileName = os.path.basename(__file__)
+        filePath = filePath.replace(currentFileName, '')
+        file = open(f"{filePath}/sample_data/{url}")
+        result = file.read()
+    except FileNotFoundError as e:
+        pass
+
+    return result
+
