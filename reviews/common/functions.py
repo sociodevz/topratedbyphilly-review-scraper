@@ -4,6 +4,7 @@ import csv
 from datetime import date, timedelta
 from pathlib import Path
 from csv import writer
+from reviews.common.config import config
 
 
 def convertStringDate2Date(dateStr):
@@ -37,6 +38,12 @@ def convertStringDate2Date(dateStr):
 
 
 def fixLocalBusinessJSON(jsonObj):
+
+    fields = ['name', 'telephone', 'address']
+    for field in fields:
+        if field not in jsonObj:
+            jsonObj[field] = None
+
     if 'aggregateRating' not in jsonObj:
         jsonObj['aggregateRating'] = {
             'ratingValue': 0,
@@ -83,3 +90,17 @@ def writeCSV(fileNamePath, fields, rows):
     except Exception as e:
         error = e
         pass
+
+
+def getOfflineFile(url):
+    result = None
+
+    try:
+        filePath = config.get('project_physical_root_path') + 'reviews/main/sites'
+        file = open(f"{filePath}/sample_data/{url}")
+        result = file.read()
+    except FileNotFoundError as e:
+        pass
+
+    return result
+
