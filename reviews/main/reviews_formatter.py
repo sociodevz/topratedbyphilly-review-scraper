@@ -332,3 +332,28 @@ class ReviewFormatter:
             pass
 
         return result
+
+    def _formatJudysbookReview(self):
+        result = self._getTemplate()
+
+        tz = pytz.timezone('UTC')
+
+        try:
+            result["id"] = self.reviewObj["review_id"]
+            result["user"]["id"] = self.reviewObj["user_id"]
+            result["user"]["name"] = self.reviewObj["name"]
+            result["review"]["rating"] = self.reviewObj["rating"]
+            result["review"]["text"] = self.reviewObj["review"]
+            result["date"] = datetime.strptime(self.reviewObj["date"], '%m/%d/%Y').isoformat()
+
+            result["misc"]["review"]["headline"] = self.reviewObj["headline"]
+
+            if self.reviewObj["review_response_date"] is not None:
+                result["misc"]["review"]["business_response"]["date"] = datetime.fromtimestamp(self.reviewObj["review_response_date"], tz).isoformat()
+                result["misc"]["review"]["business_response"]["text"] = self.reviewObj["review_response"]
+
+        except Exception as e:
+            logger.exception('Exception')
+            pass
+
+        return result
