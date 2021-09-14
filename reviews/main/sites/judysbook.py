@@ -183,9 +183,17 @@ class Judysbook(ScraperInterface):
                                     if len(matches) > 0:
                                         reviewObj['name'] = matches[0].strip()
 
-                            reviewRatingInputTag = reviewDiv.find('input', attrs={'id', re.compile('$_rating_Id')})
-                            if reviewRatingInputTag is not None:
-                                reviewObj['rating'] = float(reviewRatingInputTag.text.strip())
+                            reviewRatingOuterDiv = reviewDiv.find('div', attrs={'class': 'authorInfo'})
+                            if reviewRatingOuterDiv is not None:
+                                reviewRatingInputTags = reviewDiv.findChildren('input')
+                                if reviewRatingInputTags is not None:
+                                    if len(reviewRatingInputTags) > 0:
+                                        for reviewRatingInputTag in reviewRatingInputTags:
+                                            try:
+                                                reviewObj['rating'] = float(reviewRatingInputTag['value'].strip())
+                                                break
+                                            except KeyError as e:
+                                                pass
 
                             formattedReview = reviewFormatter.format(reviewObj)
                             result.append(formattedReview)
