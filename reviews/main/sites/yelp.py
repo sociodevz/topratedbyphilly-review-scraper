@@ -27,10 +27,10 @@ from reviews.common.config import config
 from reviews.main.reviews_formatter import ReviewFormatter
 from reviews.common.functions import *
 from reviews.common.logger import logger
-from reviews.main.scraper_interface import ScraperInterface
+from reviews.main.scraper_interface import IScraper
 
 
-class Yelp(ScraperInterface):
+class Yelp(IScraper):
 
     platformName = None
     siteUrl = None

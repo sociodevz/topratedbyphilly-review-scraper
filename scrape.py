@@ -1,7 +1,7 @@
 import requests
 import json
 
-from reviews.main.scraper import Scraper
+from reviews.main.scraper import ScraperFactory
 from argparse import ArgumentParser
 import reviews.main
 from reviews.common.config import config, updateConfigFromArgs
@@ -31,7 +31,7 @@ imageSavePath = args.image_save_path
 if 'https://' not in url:
     updateConfigFromArgs({f'scraper_mode=offline'})
 
-scraper = Scraper(engine)
+scraper = ScraperFactory.get_client(engine)
 if module == 'reviews':
     result = scraper.scrapeReviews(url)
 elif module == 'list':
