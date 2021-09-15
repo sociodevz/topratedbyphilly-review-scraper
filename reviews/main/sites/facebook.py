@@ -22,10 +22,10 @@ from reviews.common.functions import fixLocalBusinessJSON
 from reviews.main.reviews_formatter import ReviewFormatter
 
 from reviews.common.logger import logger
-from reviews.main.scraper_interface import ScraperInterface
+from reviews.main.scraper_interface import IScraper
 
 
-class Facebook(ScraperInterface):
+class Facebook(IScraper):
 
     platformName = None
     siteUrl = None

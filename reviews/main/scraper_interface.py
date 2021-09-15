@@ -1,7 +1,8 @@
 from abc import ABC, abstractclassmethod
 
 
-class ScraperInterface(ABC):
+class IScraper(ABC):
+    """Interface file for site scrapers"""
 
     @abstractclassmethod
     def scrapeListings(self, url, csvFileNamePath):
