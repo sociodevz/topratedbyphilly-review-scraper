@@ -1,6 +1,8 @@
 import requests
 import sys
 import brotli
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 from reviews.common.useragents import UserAgent
 from reviews.common.config import config
 
@@ -21,6 +23,9 @@ class Network:
             proxies = None
             if config.get('proxy_enabled') is True:
                 proxies = {'https': config.get('proxy_url_ip')}
+
+            retry = Retry(total=10,read=)
+            adapter = HTTPAdapter(max_retries=retry)
 
             if method == 'GET':
                 response = requests.get(url, headers=headersArr, proxies=proxies, data=payloadArr)
@@ -62,3 +67,17 @@ class Network:
             print(e.with_traceback(tb))
 
         return returnArr
+
+    def retry_session(retries, session=None, backoff_factor=0.3):
+        session = session or requests.Session()
+        retry = Retry(
+            total=retries,
+            read=retries,
+            connect=retries,
+            backoff_factor=backoff_factor,
+            method_whitelist=False,
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        return session
