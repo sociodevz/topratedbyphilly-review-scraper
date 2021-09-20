@@ -39,7 +39,7 @@ class Angi(IScraper):
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
-            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, headersArr, url)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl
@@ -119,7 +119,7 @@ class Angi(IScraper):
                             offset = i * limitPerPage
                             categoryReviewUrl = reviewBaseUrl.replace('OFFSET_NUMBER', str(offset)).replace('CATEGORY_ID', str(categoryFilterId))
 
-                            scrapedRawData = Network.fetch(Network.GET, categoryReviewUrl, self.siteHeaders)
+                            scrapedRawData = Network.fetch(Network.GET, self.siteHeaders, categoryReviewUrl)
                             if(scrapedRawData['code'] == 200):
                                 reviewsRawData = json.loads(scrapedRawData['body'])
                                 if 'reviews' in reviewsRawData:
@@ -174,7 +174,7 @@ class Angi(IScraper):
                         sleep(randrange(1, 3))
                         nextPageUrl = self._getNextPageUrl(soup)
                         if nextPageUrl is not False:
-                            scrapedRawData = Network.fetch(Network.GET, nextPageUrl, self.siteHeaders)
+                            scrapedRawData = Network.fetch(Network.GET, self.siteHeaders, nextPageUrl)
                             if(scrapedRawData['code'] == 200):
                                 soup = BeautifulSoup(scrapedRawData['body'], 'lxml')
                                 if soup is None:

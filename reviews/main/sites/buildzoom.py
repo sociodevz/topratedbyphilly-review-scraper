@@ -45,7 +45,7 @@ class Buildzoom(IScraper):
         while scrape is True:
             scrape = False
             headersArr['path'] = url.replace('https://www.buildzoom.com', '')
-            resultArr = Network.fetch(Network.GET, url, headersArr)
+            resultArr = Network.fetch(Network.GET, headersArr, url)
 
             if resultArr['code'] == 200:
                 bodyHtml = resultArr['body']
@@ -133,7 +133,7 @@ class Buildzoom(IScraper):
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
-            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, headersArr, url)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl

@@ -37,7 +37,7 @@ class Topratedlocal(IScraper):
         return returnArr
 
     def scrapeDirectory(self, url, csvFileNamePath):
-        resultArr = Network.fetch(Network.GET, url)
+        resultArr = Network.fetch(Network.GET, None, url)
 
         if resultArr['code'] == 200:
             bodyHtml = resultArr['body']

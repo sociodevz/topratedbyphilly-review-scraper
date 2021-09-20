@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask.helpers import url_for
-from reviews.main.scraper import Scraper
+from reviews.main.scraper import ScraperFactory
 from reviews.common.config import config, updateConfigFromArgs
 import requests
 import json
@@ -13,7 +13,7 @@ app.config['JSON_SORT_KEYS'] = False
 def scrape():
     engine = request.form.get('engine').title()
     url = request.form.get('url')
-    scraper = Scraper(engine)
+    scraper = ScraperFactory.get_client(engine)
     result = scraper.scrapeReviews(url)
     response = {
         'result': {
@@ -21,8 +21,12 @@ def scrape():
             'data': result
         }
     }
+
+    if len(result) == 0:
+        response['result']['success'] = False
+        response['result'].pop('data')
     return jsonify(response), 200
 
 
 # Todo: disable below when running using gunicorn
-app.run(host='0.0.0.0', port=5051)
+#app.run(host='0.0.0.0', port=5051, debug=config.get('debug'))
