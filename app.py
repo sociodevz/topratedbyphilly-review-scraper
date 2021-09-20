@@ -21,8 +21,12 @@ def scrape():
             'data': result
         }
     }
+
+    if len(result) == 0:
+        response['result']['success'] = False
+        response['result'].pop('data')
     return jsonify(response), 200
 
 
 # Todo: disable below when running using gunicorn
-app.run(host='0.0.0.0', port=5051)
+#app.run(host='0.0.0.0', port=5051, debug=config.get('debug'))
