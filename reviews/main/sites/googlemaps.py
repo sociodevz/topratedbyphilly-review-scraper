@@ -42,6 +42,7 @@ class Googlemaps(IScraper):
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
         self.options.add_argument('--no-sandbox')
+        self.options.add_argument('--proxy-server=%s' % config.get('proxy_url_ip'))
         self.options.headless = config.get('chrome_headless_mode')
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
         #self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
@@ -528,7 +529,7 @@ class Googlemaps(IScraper):
     def scrapeReviews(self, url):
         try:
             self.browser.get(url)
-            time.sleep(5)
+            time.sleep(10)
         except Exception as e:
             logger.exception('Exception')
             self.browser.quit()

@@ -46,7 +46,7 @@ class Bbb(IScraper):
             url = url.replace('https://www.bbb.org/search', 'https://www.bbb.org/api/search')
             headersArr['path'] = url.replace('https://www.bbb.org', '')
 
-            resultArr = Network.fetch(Network.GET, url, headersArr)
+            resultArr = Network.fetch(Network.GET, headersArr, url)
 
             if resultArr['code'] == 200:
                 jsonStr = resultArr['body']
@@ -101,7 +101,7 @@ class Bbb(IScraper):
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
-            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, headersArr, url)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl
@@ -208,7 +208,7 @@ class Bbb(IScraper):
         reviewFormatter = ReviewFormatter(self.platformName)
         for i in range(math.ceil(int(totalReviews/10))+1):
             reviewUrl = reviewBaseUrl.replace('PAGEID', str(i+1))
-            scrapedRawData = Network.fetch(Network.GET, reviewUrl, self.siteHeaders)
+            scrapedRawData = Network.fetch(Network.GET, self.siteHeaders, reviewUrl)
             if(scrapedRawData['code'] == 200):
                 reviewsRawData = json.loads(scrapedRawData['body'])
                 if 'items' in reviewsRawData:

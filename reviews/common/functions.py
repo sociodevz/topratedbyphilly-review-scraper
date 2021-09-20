@@ -55,11 +55,6 @@ def fixLocalBusinessJSON(jsonObj):
         if 'reviewCount' not in jsonObj['aggregateRating']:
             jsonObj['aggregateRating']['reviewCount'] = 0
 
-    keysArr = ['telephone', 'address']
-    for keyName in keysArr:
-        if keyName not in jsonObj:
-            jsonObj[keyName] = None
-
     return jsonObj
 
 

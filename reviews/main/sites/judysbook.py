@@ -39,7 +39,7 @@ class Judysbook(IScraper):
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}
-            scrapedRawData = Network.fetch(Network.GET, url, headersArr)
+            scrapedRawData = Network.fetch(Network.GET, headersArr, url)
             if(scrapedRawData['code'] == 200):
                 self.siteHeaders = scrapedRawData['headers']['requested']
                 self.siteHeaders['referer'] = self.siteUrl
@@ -201,7 +201,7 @@ class Judysbook(IScraper):
                     sleep(randrange(1, 3))
                     nextPageUrl = self._getNextPageUrl(soup)
                     if nextPageUrl is not False:
-                        scrapedRawData = Network.fetch(Network.GET, nextPageUrl, self.siteHeaders)
+                        scrapedRawData = Network.fetch(Network.GET, self.siteHeaders, nextPageUrl)
                         if(scrapedRawData['code'] == 200):
                             soup = BeautifulSoup(scrapedRawData['body'], 'lxml')
                             if soup is None:
