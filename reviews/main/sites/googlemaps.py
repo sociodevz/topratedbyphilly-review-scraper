@@ -530,8 +530,10 @@ class Googlemaps(IScraper):
 
     def scrapeReviews(self, url):
         try:
+            self.siteUrl = url
+
             logger.info(f'Scraping: {self.siteUrl}')
-            self.browser.get(url)
+            self.browser.get(self.siteUrl)
             time.sleep(10)
         except Exception as e:
             logger.exception('Exception')
