@@ -530,6 +530,8 @@ class Googlemaps(IScraper):
 
     def scrapeReviews(self, url):
         try:
+            self.siteUrl = url
+
             logger.info(f'Scraping: {self.siteUrl}')
             self.browser.get(url)
             time.sleep(10)
