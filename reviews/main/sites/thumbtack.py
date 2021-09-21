@@ -231,3 +231,10 @@ class Thumbtack(IScraper):
                 sleep(randrange(1, 3))
 
         return result
+
+    def scrapeListings(self, url, csvFileNamePath):
+        pass
+
+    def scrapeImages(self, url, imageSavePath):
+        pass
+
