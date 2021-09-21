@@ -26,9 +26,11 @@ class Bbb(IScraper):
 
     def __init__(self):
         self.platformName = self.__class__.__name__
-        print(f'Initalized {self.platformName} Engine')
         logger.info(f'Initalized {self.platformName} Engine')
         pass
+
+    def __del__(self):
+        logger.info(f'Terminating {self.platformName} Engine')
 
     def scrapeListings(self, url, csvFileNamePath):
         url = "https://www.bbb.org/search?find_country=USA&find_latlng=39.989654%2C-75.148976&find_loc=Philadelphia%2C%20PA&find_text=Plumber&page=1&sort=Relevance&touched=1"
@@ -98,6 +100,8 @@ class Bbb(IScraper):
         returnArr = []
 
         self.siteUrl = url
+
+        logger.info(f'Scraping: {self.siteUrl}')
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}

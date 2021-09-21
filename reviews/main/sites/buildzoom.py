@@ -29,9 +29,11 @@ class Buildzoom(IScraper):
 
     def __init__(self):
         self.platformName = self.__class__.__name__
-        print(f'Initalized {self.platformName} Engine')
         logger.info(f'Initalized {self.platformName} Engine')
         pass
+
+    def __del__(self):
+        logger.info(f'Terminating {self.platformName} Engine')
 
     def scrapeListings(self, url, csvFileNamePath):
         userAgent = UserAgent()
@@ -130,6 +132,8 @@ class Buildzoom(IScraper):
         returnArr = []
 
         self.siteUrl = url
+
+        logger.info(f'Scraping: {self.siteUrl}')
 
         if config.get('scraper_mode') == 'online':
             headersArr = {}

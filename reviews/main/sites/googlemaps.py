@@ -36,7 +36,6 @@ class Googlemaps(IScraper):
 
     def __init__(self, debug=False):
         self.platformName = self.__class__.__name__
-        print(f'Initalized {self.platformName} Engine')
         logger.info(f'Initalized {self.platformName} Engine')
 
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
@@ -61,6 +60,9 @@ class Googlemaps(IScraper):
                 "total": None,
             },
         }
+
+    def __del__(self):
+        logger.info(f'Terminating {self.platformName} Engine')
 
     def clickOpenCloseTime(self):
         if(len(list(self.browser.find_elements_by_class_name("LJKBpe-Tswv1b-hour-text"))) != 0):
@@ -528,6 +530,7 @@ class Googlemaps(IScraper):
 
     def scrapeReviews(self, url):
         try:
+            logger.info(f'Scraping: {self.siteUrl}')
             self.browser.get(url)
             time.sleep(10)
         except Exception as e:

@@ -38,7 +38,6 @@ class Facebook(IScraper):
     def __init__(self, debug=False):
 
         self.platformName = self.__class__.__name__
-        print(f'Initalized {self.platformName} Engine')
         logger.info(f'Initalized {self.platformName} Engine')
 
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
