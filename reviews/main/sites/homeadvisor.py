@@ -68,7 +68,11 @@ class Homeadvisor(IScraper):
         return returnArr
 
     def processRawData(self):
-        jsonStr = self.extractJSON()['@graph'][1]
+        jsonStr = self.extractJSON()
+        if type(jsonStr) is not dict:
+            return []
+
+        jsonStr = jsonStr['@graph'][1]
         jsonStr = fixLocalBusinessJSON(jsonStr)
 
         self.siteUrl = jsonStr['@id']
