@@ -132,3 +132,8 @@ class Trustpilot(IScraper):
 
         return result
 
+    def scrapeListings(self, url, csvFileNamePath):
+        pass
+
+    def scrapeImages(self, url, imageSavePath):
+        pass

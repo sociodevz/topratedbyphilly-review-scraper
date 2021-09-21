@@ -139,3 +139,9 @@ class Gaf(IScraper):
             pass
 
         return result
+
+    def scrapeListings(self, url, csvFileNamePath):
+        pass
+
+    def scrapeImages(self, url, imageSavePath):
+        pass
