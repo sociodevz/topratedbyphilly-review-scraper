@@ -188,27 +188,27 @@ class Buildzoom(IScraper):
             soup = BeautifulSoup(self.scrapedRawData, 'lxml')
             if soup is not None:
                 mainSection = soup.find(attrs={"id": "main"})
-                companyDetailsJSON = mainSection['ng-init'].replace('init(', '')
-                companyDetailsJSON = companyDetailsJSON.replace("})", '}')
-                companyDetailsJSON = companyDetailsJSON.lstrip("'")
-                companyDetailsArr = json.loads(companyDetailsJSON)
-                result['id'] = companyDetailsArr['id']
-                result['name'] = companyDetailsArr['business_name']
+                if mainSection is not None:
+                    companyDetailsJSON = mainSection['ng-init'].replace('init(', '')
+                    companyDetailsJSON = companyDetailsJSON.replace("})", '}')
+                    companyDetailsJSON = companyDetailsJSON.lstrip("'")
+                    companyDetailsArr = json.loads(companyDetailsJSON)
+                    result['id'] = companyDetailsArr['id']
+                    result['name'] = companyDetailsArr['business_name']
 
-                ratingSection = soup.find_all(attrs={"class": "contractor-review-stars"})
-                for tag in ratingSection:
-                    subTag = tag.find("meta", attrs={"itemprop": "ratingValue"})
-                    result['aggregateRating']['ratingValue'] = int(subTag['content'])
+                    ratingSection = soup.find_all(attrs={"class": "contractor-review-stars"})
+                    for tag in ratingSection:
+                        subTag = tag.find("meta", attrs={"itemprop": "ratingValue"})
+                        result['aggregateRating']['ratingValue'] = int(subTag['content'])
 
-                    subTag = tag.find("span", attrs={"class": "contractor-rating-review-count"})
-                    result['aggregateRating']['reviewCount'] = int(subTag.text)
+                        subTag = tag.find("span", attrs={"class": "contractor-rating-review-count"})
+                        result['aggregateRating']['reviewCount'] = int(subTag.text)
 
-                contactOuterObj = soup.find("div", attrs={"itemprop": "telephone"})
-                if contactOuterObj is not None:
-                    contactInnerObj = contactOuterObj.find("a")
-                    if contactInnerObj is not None:
-                        result['telephone'] = contactInnerObj.text.strip()
-
+                    contactOuterObj = soup.find("div", attrs={"itemprop": "telephone"})
+                    if contactOuterObj is not None:
+                        contactInnerObj = contactOuterObj.find("a")
+                        if contactInnerObj is not None:
+                            result['telephone'] = contactInnerObj.text.strip()
         except Exception as e:
             logger.exception('Exception')
             pass
