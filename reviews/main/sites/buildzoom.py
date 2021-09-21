@@ -199,10 +199,12 @@ class Buildzoom(IScraper):
                     ratingSection = soup.find_all(attrs={"class": "contractor-review-stars"})
                     for tag in ratingSection:
                         subTag = tag.find("meta", attrs={"itemprop": "ratingValue"})
-                        result['aggregateRating']['ratingValue'] = int(subTag['content'])
+                        if subTag is not None:
+                            result['aggregateRating']['ratingValue'] = int(subTag['content'])
 
                         subTag = tag.find("span", attrs={"class": "contractor-rating-review-count"})
-                        result['aggregateRating']['reviewCount'] = int(subTag.text)
+                        if subTag is not None:
+                            result['aggregateRating']['reviewCount'] = int(subTag.text)
 
                     contactOuterObj = soup.find("div", attrs={"itemprop": "telephone"})
                     if contactOuterObj is not None:
