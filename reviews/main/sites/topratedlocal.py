@@ -40,7 +40,7 @@ class Topratedlocal(IScraper):
 
         return returnArr
 
-    def scrapeDirectory(self, url, csvFileNamePath):
+    def scrapeListings(self, url, csvFileNamePath):
         resultArr = Network.fetch(Network.GET, None, url)
 
         if resultArr['code'] == 200:
@@ -93,3 +93,5 @@ class Topratedlocal(IScraper):
 
                     writeCSV(csvFileNamePath, fields, rows)
 
+    def scrapeImages(self, url, imageSavePath):
+        pass
