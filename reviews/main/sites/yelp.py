@@ -195,6 +195,9 @@ class Yelp(IScraper):
 
     def processRawData(self):
         jsonStr = self.extractJSON()
+        if type(jsonStr) is not dict:
+            return []
+
         jsonStr = fixLocalBusinessJSON(jsonStr)
 
         return {
@@ -215,9 +218,9 @@ class Yelp(IScraper):
         matches = re.findall(pattern, self.scrapedRawData, re.MULTILINE)
 
         if len(matches) > 0:
-            result = matches[0]
+            result = json.loads(matches[0])
 
-        return json.loads(result)
+        return result
 
     def extractId(self):
         result = None
