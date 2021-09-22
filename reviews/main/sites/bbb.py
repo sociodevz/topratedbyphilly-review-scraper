@@ -30,7 +30,7 @@ class Bbb(IScraper):
         pass
 
     def __del__(self):
-        logger.info(f'Terminating {self.platformName} Engine')
+        logger.info(f'Terminating {self.platformName} Engine\nScraping: {self.siteUrl}')
 
     def scrapeListings(self, url, csvFileNamePath):
         url = "https://www.bbb.org/search?find_country=USA&find_latlng=39.989654%2C-75.148976&find_loc=Philadelphia%2C%20PA&find_text=Plumber&page=1&sort=Relevance&touched=1"

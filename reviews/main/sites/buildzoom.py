@@ -33,7 +33,7 @@ class Buildzoom(IScraper):
         pass
 
     def __del__(self):
-        logger.info(f'Terminating {self.platformName} Engine')
+        logger.info(f'Terminating {self.platformName} Engine\nScraping: {self.siteUrl}')
 
     def scrapeListings(self, url, csvFileNamePath):
         userAgent = UserAgent()
