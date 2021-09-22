@@ -30,7 +30,15 @@ class Network:
                 session.cookies = sessionDataArr
 
             if method == 'GET':
-                response = session.get(url, headers=headersArr, proxies=proxies, data=payloadArr)
+                retryCntr = 0
+                retry = True
+                while retry is True:
+                    retry = False
+                    response = session.get(url, headers=headersArr, proxies=proxies, data=payloadArr)
+                    if response.status_code == 503:
+                        if retryCntr < 2:
+                            retry = True
+                        retryCntr += 1
             elif method == 'POST':
                 response = session.post(url, headers=headersArr, proxies=proxies, data=payloadArr)
 
