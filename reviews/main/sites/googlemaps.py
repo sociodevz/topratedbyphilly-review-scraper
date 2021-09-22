@@ -62,7 +62,7 @@ class Googlemaps(IScraper):
         }
 
     def __del__(self):
-        logger.info(f'Terminating {self.platformName} Engine')
+        logger.info(f'Terminating {self.platformName} Engine\nScraping: {self.siteUrl}')
 
     def clickOpenCloseTime(self):
         if(len(list(self.browser.find_elements_by_class_name("LJKBpe-Tswv1b-hour-text"))) != 0):
