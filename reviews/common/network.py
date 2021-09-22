@@ -5,6 +5,7 @@ from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from reviews.common.useragents import UserAgent
 from reviews.common.config import config
+from reviews.common.logger import logger
 
 
 class Network:
@@ -43,6 +44,8 @@ class Network:
                 response = session.post(url, headers=headersArr, proxies=proxies, data=payloadArr)
 
             returnArr = {"code": response.status_code, "headers": {"requested": headersArr, "received": response.headers}, "cookies": response.cookies, "body": response.text}
+            debugArr = {"code": response.status_code, "url": url}
+            logger.info(f'Network Response: {debugArr}')
         except Exception as e:
             tb = sys.exc_info()[2]
             print(e.with_traceback(tb))
