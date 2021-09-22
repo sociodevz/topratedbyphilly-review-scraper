@@ -156,7 +156,7 @@ class Googlemaps(IScraper):
                 "website": website,
                 "reviews": [],
                 "rating": {
-                    "aggregate": float(str(avg_rating).replace('stars', '').strip()),
+                    "aggregate": float(re.findall(r'\d+(?:\.\d+)?', str(avg_rating).replace('stars', '').strip())[0]),
                     "total": total_reviews,
                 },
             }
