@@ -44,7 +44,7 @@ class Facebook(IScraper):
         self.options = Options()
         self.options.add_argument('--no-sandbox')
         self.options.add_argument('--lang=en-US')
-        # self.options.add_argument('--proxy-server=u1.p.webshare.io:10000')
+        self.options.add_argument('--proxy-server=%s' % config.get('proxy_url_ip'))
         self.options.headless = config.get('chrome_headless_mode')
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
 
@@ -320,7 +320,7 @@ class Facebook(IScraper):
 
             if config.get('scraper_mode') == 'online':
                 self.browser.get(self.siteUrl)
-                time.sleep(5)
+                #time.sleep(5)
             elif config.get('scraper_mode') == 'offline':
                 filePath = os.path.realpath(__file__)
                 currentFileName = os.path.basename(__file__)
@@ -344,3 +344,9 @@ class Facebook(IScraper):
         self.browser.quit()
 
         return(self.location_data)
+
+    def scrapeListings(self, url, csvFileNamePath):
+        pass
+
+    def scrapeImages(self, url, imageSavePath):
+        pass
