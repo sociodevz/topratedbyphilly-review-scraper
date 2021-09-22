@@ -61,6 +61,9 @@ class Facebook(IScraper):
             },
         }
 
+    def __del__(self):
+        logger.info(f'Terminating {self.platformName} Engine')
+
     def extractJSON(self):
         result = None
         pattern = r"<script type=\"application/ld\+json\".*?>(.*?)</script>"
@@ -317,6 +320,8 @@ class Facebook(IScraper):
     def scrapeReviews(self, url):
         try:
             self.siteUrl = self._cleanupUrl(url)
+
+            logger.info(f'Scraping: {self.siteUrl}')
 
             if config.get('scraper_mode') == 'online':
                 self.browser.get(self.siteUrl)
