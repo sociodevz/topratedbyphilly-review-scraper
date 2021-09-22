@@ -98,7 +98,7 @@ class Angi(IScraper):
             pass
 
     def generateReviewUrl(self):
-        result = f"https://www.angi.com/gateway/spprofile-visitor/v2/leaf/getReviewsBySpidWithFilters?categoryId=CATEGORY_ID&limit=10&offset=OFFSET_NUMBER&serviceProviderId={self.siteId}"
+        result = f"https://www.angi.com/gateway/spprofile-visitor/v2/leaf/getReviewsBySpidWithFilters?categoryId=CATEGORY_ID&limit=20&offset=OFFSET_NUMBER&serviceProviderId={self.siteId}"
 
         return result
 
@@ -118,7 +118,7 @@ class Angi(IScraper):
                         categoryReviewCount = int(reviewFilterCategory['data-count'])
                         categoryFilterId = int(reviewFilterCategory['data-key'])
 
-                        limitPerPage = 10
+                        limitPerPage = 20
                         for i in range(math.ceil(int(categoryReviewCount/limitPerPage))+1):
                             offset = i * limitPerPage
                             categoryReviewUrl = reviewBaseUrl.replace('OFFSET_NUMBER', str(offset)).replace('CATEGORY_ID', str(categoryFilterId))
@@ -131,7 +131,7 @@ class Angi(IScraper):
                                         for review in reviewsRawData['reviews']:
                                             formattedReview = reviewFormatter.format(review)
                                             result.append(formattedReview)
-                                sleep(randrange(1, 3))
+                                sleep(randrange(3, 10))
                 else:
                     scrape = True
 
