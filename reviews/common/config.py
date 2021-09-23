@@ -1,13 +1,11 @@
-config = {
-    'debug': True,
-    'logger_severity_level': 'ERROR',
-    'chrome_headless_mode': True,
-    'project_physical_root_path': '/var/www/html/topratedbyphilly/scraper/',
-    'scraper_mode': 'online',
-    'proxy_url_ip': '63.141.236.210:19016',
-    'proxy_enabled': True,
-    'scraper_sites': 'yelp,bbb,trustpilot,houzz,googlemaps,buildzoom,angi,gaf,bestpickreports'
-}
+import json
+import os
+
+config = {}
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+with open(f'{dir_path}/config.json', 'r') as config_file:
+    config.update(json.load(config_file))
 
 def updateConfigFromArgs(args):
     other_args = []
