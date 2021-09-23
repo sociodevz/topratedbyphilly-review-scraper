@@ -1,0 +1,10 @@
+{
+    "debug": true,
+    "logger_severity_level": "INFO",
+    "chrome_headless_mode": false,
+    "project_physical_root_path": "/var/www/html/topratedbyphilly/scraper/",
+    "scraper_mode": "online",
+    "proxy_url_ip": "173.208.239.42:19013",
+    "proxy_enabled": true,
+    "scraper_sites": "yelp,bbb,trustpilot,houzz,googlemaps,buildzoom,angi,gaf,bestpickreports"
+}
