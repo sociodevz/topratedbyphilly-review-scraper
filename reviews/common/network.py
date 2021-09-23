@@ -48,7 +48,7 @@ class Network:
             logger.info(f'Network Response: {debugArr}')
         except Exception as e:
             tb = sys.exc_info()[2]
-            print(e.with_traceback(tb))
+            logger.exception(f'Network Error')
 
         return returnArr
 
