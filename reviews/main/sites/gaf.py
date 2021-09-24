@@ -115,7 +115,7 @@ class Gaf(IScraper):
 
                     reviewPublishedObj = reviewObj.find("time", attrs={"class", "customer-reviews-full-listing__time"})
                     if reviewPublishedObj is not None:
-                        review['datePublished'] = reviewPublishedObj['datetime']
+                        review['datePublished'] = reviewPublishedObj.text.strip()
 
                     reviewRatingObj = reviewObj.find("div", attrs={"class", "customer-reviews-full-listing__stars"})
                     if reviewRatingObj is not None:
