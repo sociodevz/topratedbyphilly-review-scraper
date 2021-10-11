@@ -119,7 +119,7 @@ class Gaf(IScraper):
 
                     reviewRatingObj = reviewObj.find("div", attrs={"class", "customer-reviews-full-listing__stars"})
                     if reviewRatingObj is not None:
-                        if 'data-score' in reviewRatingObj:
+                        if reviewRatingObj.has_attr('data-score'):
                             review['reviewRating']['ratingValue'] = reviewRatingObj['data-score']
 
                     reviewTextObj = reviewObj.find("span", attrs={"class", "customer-reviews-full-listing__quote"})
