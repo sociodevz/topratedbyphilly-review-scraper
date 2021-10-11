@@ -103,38 +103,40 @@ class Gaf(IScraper):
 
             soup = BeautifulSoup(self.scrapedRawData, 'lxml')
             if soup is not None:
-                reviewsObj = soup.find_all("blockquote", attrs={"class": "customer-reviews-full-listing__inner"})
-                for reviewObj in reviewsObj:
-                    review = {}
-                    review['id'] = 0
-                    review['author'] = {"name": ""}
-                    review['reviewRating'] = {"ratingValue": 0}
-                    review['reviewBody'] = None
-                    review['datePublished'] = None
-                    review['reviewResponse'] = None
+                reviewsPanelDiv = soup.find("div", attrs={"id": "panel-reviews-gaf"})
+                if reviewsPanelDiv is not None:
+                    reviewsObj = reviewsPanelDiv.find_all("blockquote", attrs={"class": "customer-reviews-full-listing__inner"})
+                    for reviewObj in reviewsObj:
+                        review = {}
+                        review['id'] = 0
+                        review['author'] = {"name": ""}
+                        review['reviewRating'] = {"ratingValue": 0}
+                        review['reviewBody'] = None
+                        review['datePublished'] = None
+                        review['reviewResponse'] = None
 
-                    reviewPublishedObj = reviewObj.find("time", attrs={"class", "customer-reviews-full-listing__time"})
-                    if reviewPublishedObj is not None:
-                        review['datePublished'] = reviewPublishedObj.text.strip()
+                        reviewPublishedObj = reviewObj.find("time", attrs={"class", "customer-reviews-full-listing__time"})
+                        if reviewPublishedObj is not None:
+                            review['datePublished'] = reviewPublishedObj.text.strip()
 
-                    reviewRatingObj = reviewObj.find("div", attrs={"class", "customer-reviews-full-listing__stars"})
-                    if reviewRatingObj is not None:
-                        if reviewRatingObj.has_attr('data-score'):
-                            review['reviewRating']['ratingValue'] = reviewRatingObj['data-score']
+                        reviewRatingObj = reviewObj.find("div", attrs={"class", "customer-reviews-full-listing__stars"})
+                        if reviewRatingObj is not None:
+                            if reviewRatingObj.has_attr('data-score'):
+                                review['reviewRating']['ratingValue'] = reviewRatingObj['data-score']
 
-                    reviewTextObj = reviewObj.find("span", attrs={"class", "customer-reviews-full-listing__quote"})
-                    if reviewTextObj is not None:
-                        review['reviewBody'] = reviewTextObj.text.strip('"')
+                        reviewTextObj = reviewObj.find("span", attrs={"class", "customer-reviews-full-listing__quote"})
+                        if reviewTextObj is not None:
+                            review['reviewBody'] = reviewTextObj.text.strip('"')
 
-                    reviewAuthorObj = reviewObj.find("p", attrs={"class", "customer-reviews-full-listing__author"})
-                    if reviewAuthorObj is not None:
-                        reviewerName = reviewAuthorObj.text.strip('-')
-                        reviewerName = reviewerName.strip()
-                        reviewerName = reviewerName.replace('X.X,', 'Anonymous')
-                        review['author']['name'] = reviewerName
+                        reviewAuthorObj = reviewObj.find("p", attrs={"class", "customer-reviews-full-listing__author"})
+                        if reviewAuthorObj is not None:
+                            reviewerName = reviewAuthorObj.text.strip('-')
+                            reviewerName = reviewerName.strip()
+                            reviewerName = reviewerName.replace('X.X,', 'Anonymous')
+                            review['author']['name'] = reviewerName
 
-                    formattedReview = reviewFormatter.format(review)
-                    result.append(formattedReview)
+                        formattedReview = reviewFormatter.format(review)
+                        result.append(formattedReview)
         except Exception as e:
             logger.exception('Exception')
             pass
