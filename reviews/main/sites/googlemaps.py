@@ -41,7 +41,8 @@ class Googlemaps(IScraper):
         self.PATH = f"{config.get('project_physical_root_path')}chromedriver"
         self.options = Options()
         self.options.add_argument('--no-sandbox')
-        self.options.add_argument('--proxy-server=%s' % config.get('proxy_url_ip'))
+        if config.get('proxy_enabled') is True:
+            self.options.add_argument('--proxy-server=%s' % config.get('proxy_url_ip'))
         self.options.headless = config.get('chrome_headless_mode')
         self.browser = webdriver.Chrome(self.PATH, options=self.options)
         #self.browserReviews = webdriver.Chrome(self.PATH, options=self.options)
@@ -175,9 +176,18 @@ class Googlemaps(IScraper):
         return reviewElements
 
     def _scrollReviewDiv(self):
-        scrollable_div = self.browser.find_element_by_css_selector('div.section-layout.section-scrollbox')
-        self.browser.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
-        time.sleep(4)
+        try:
+            scrollable_div = self.browser.find_element_by_css_selector('div.section-layout.section-scrollbox')
+            self.browser.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
+            time.sleep(4)
+        except Exception as e:
+            try:
+                scrollable_div = self.browser.find_element_by_css_selector('div.section-scrollbox')
+                self.browser.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
+                time.sleep(4)
+            except Exception as e:
+                logger.exception('Exception')
+
 
     def loadAllReviews(self):
         try:
