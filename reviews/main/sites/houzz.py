@@ -65,8 +65,8 @@ class Houzz(IScraper):
             try:
                 originalUrl = url
                 browser.get(originalUrl)
-                time.sleep(5)
-                val = input("Continue:")
+                time.sleep(10)
+                #val = input("Continue:")
 
                 websiteName = None
                 soup = BeautifulSoup(browser.page_source, 'lxml')

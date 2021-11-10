@@ -127,7 +127,7 @@ class Yelp(IScraper):
 
                 scrape = True
                 browser.get(url)
-                time.sleep(5)
+                time.sleep(10)
                 cntr = 1
                 while scrape is True:
                     scrape = False
