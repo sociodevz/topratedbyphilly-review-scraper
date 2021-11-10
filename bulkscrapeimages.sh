@@ -1,9 +1,9 @@
 #!/bin/bash
-while getopts csv:engine: flag
+while getopts c:e: flag
 do
     case "${flag}" in
-        csv) INPUT=${OPTARG};;
-        engine) ENGINE=${OPTARG};;
+        c) INPUT=${OPTARG};;
+        e) ENGINE=${OPTARG};;
     esac
 done
 
@@ -14,6 +14,6 @@ while read id url
 do
 	echo "id : $id"
 	echo "url : $url"
-	echo "/var/www/html/topratedbyphilly/scraper/venv-scraper/bin/python /var/www/html/topratedbyphilly/scraper/scrape.py --module=images --engine=$ENGINE --image_save_path=/var/www/html/topratedbyphilly/scraper/tmp/images/$ENGINE/$id --url=$url"
+	echo "/var/www/html/topratedbyphilly/scraper/venv-scraper/bin/python scrape.py --module=images --engine=$ENGINE --image_save_path=/var/www/html/topratedbyphilly/scraper/tmp/images/$ENGINE/$id --url=$url"
 done < $INPUT
 IFS=$OLDIFS
