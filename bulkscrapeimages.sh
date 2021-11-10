@@ -14,6 +14,7 @@ while read id url
 do
 	echo "id : $id"
 	echo "url : $url"
-	echo "/var/www/html/topratedbyphilly/scraper/venv-scraper/bin/python scrape.py --module=images --engine=$ENGINE --image_save_path=/var/www/html/topratedbyphilly/scraper/tmp/images/$ENGINE/$id/ --url=$url"
+	scrape_cmd="/var/www/html/topratedbyphilly/scraper/venv-scraper/bin/python scrape.py --module=images --engine=$ENGINE --image_save_path=/var/www/html/topratedbyphilly/scraper/tmp/images/$ENGINE/$id/ --url=$url"
+	eval $scrape_cmd
 done < $INPUT
 IFS=$OLDIFS
