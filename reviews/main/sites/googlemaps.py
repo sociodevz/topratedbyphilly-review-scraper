@@ -1,3 +1,4 @@
+import math
 import requests
 import sys
 import re
@@ -177,46 +178,20 @@ class Googlemaps(IScraper):
 
     def _scrollReviewDiv(self):
         try:
-            scrollable_div = self.browser.find_element_by_css_selector('div.section-layout.section-scrollbox')
-            self.browser.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
-            time.sleep(4)
+            all_reviews = self.browser.find_elements_by_css_selector("div[data-review-id]")
+            # we are dividing below length /2 because above selector returns 2 divs for each review
+            while (len(all_reviews)/2) < self.location_data["rating"]['total']:
+                self.browser.execute_script('arguments[0].scrollIntoView(true);', all_reviews[-1])
+                WebDriverWait(self.browser, 5, 0.25).until_not(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[class$="activityIndicator"]')))
+                all_reviews = self.browser.find_elements_by_css_selector("div[data-review-id]")
         except Exception as e:
-            try:
-                scrollable_div = self.browser.find_element_by_css_selector('div.section-scrollbox')
-                self.browser.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
-                time.sleep(4)
-            except Exception as e:
-                logger.exception('Exception')
-
+            logger.exception('Exception')
 
     def loadAllReviews(self):
         try:
             self.clickAllReviewsButton()
             totalReviewsCount = self.location_data["rating"]['total']
-
-            retryCntr = 0
-            lastLoadedReviewCount = 0
-
-            currentlyLoadedReviews = self.getReviewElements()
-            lastLoadedReviewCount = currentlyLoadedReviewsCnt = len(list(currentlyLoadedReviews))
-            while len(list(currentlyLoadedReviews)) < totalReviewsCount:
-
-                if retryCntr < 3:
-                    lastLoadedReviewElement = currentlyLoadedReviews[-1]
-                    #self.browser.execute_script('arguments[0].scrollIntoView(true)', lastLoadedReviewElement)
-                    #time.sleep(2)
-                    self._scrollReviewDiv()
-
-                    currentlyLoadedReviews = self.getReviewElements()
-                    currentlyLoadedReviewsCnt = len(list(currentlyLoadedReviews))
-
-                    if currentlyLoadedReviewsCnt <= lastLoadedReviewCount:
-                        retryCntr += 1
-                    else:
-                        lastLoadedReviewCount = currentlyLoadedReviewsCnt
-                else:
-                    break
-
+            self._scrollReviewDiv()
         except Exception as e:
             logger.exception('Exception')
             pass
@@ -225,8 +200,8 @@ class Googlemaps(IScraper):
 
         try:
             openCloseTimesString = self.browser.find_element_by_css_selector("div[aria-label$='Hide open hours for the week']").get_attribute("aria-label")
-            #1st explode by ; for days split
-            #2nd explode by , for day and time split
+            # 1st explode by ; for days split
+            # 2nd explode by , for day and time split
 
             if openCloseTimesString != '':
                 daysSplitArr = openCloseTimesString.split(';')
@@ -246,7 +221,7 @@ class Googlemaps(IScraper):
         try:
             a = self.browser.find_elements_by_class_name("section-popular-times-graph")
             dic = {0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday"}
-            l = {"Sunday": [], "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": []}
+            days = {"Sunday": [], "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": []}
             count = 0
 
             for i in a:
@@ -256,7 +231,7 @@ class Googlemaps(IScraper):
                     l[dic[count]].append(x)
                 count = count + 1
 
-            for i, j in l.items():
+            for i, j in days.items():
                 self.location_data["popular_times"][i] = j
         except Exception as e:
             logger.exception('Exception')
@@ -282,7 +257,7 @@ class Googlemaps(IScraper):
                     finaReview['review_response'] = None
                     finaReview['review_response_date'] = None
 
-                    #review Id
+                    # review Id
                     finaReview['review_id'] = review['data-review-id']
 
                     # reviewer Name
@@ -296,30 +271,29 @@ class Googlemaps(IScraper):
                     finaReview['user_id'] = int(reviewerId)
 
                     # reviewer profilePic
-                    reviewerImageUrl = review.find("img")
+                    reviewerImageUrl = reviewerDetailsObj.find("img")
                     if reviewerImageUrl is not None:
                         finaReview['profile_image'] = reviewerImageUrl['src']
 
                     # reviewer level & total reviews
-                    reviewerDetailsOuterObj = review.find("a", attrs={"href": re.compile('^https://www.google.com/maps/contrib/')})
+                    reviewerDetailsOuterObj = review.find("a", attrs={"href": re.compile('^https://www.google.com/maps/contrib/'), "aria-label": None})
                     if reviewerDetailsOuterObj is not None:
-                        reviewerDetailsInnerObj = review.find("div", attrs={"class": re.compile('.*VdSJob')})
-                        if reviewerDetailsInnerObj is not None:
-                            spansObj = reviewerDetailsInnerObj.findChildren("span", recursive=False)
-                            spansArr = ["level", "total_reviews"]
-                            for cntr, spanObj in enumerate(spansObj):
-                                if cntr == 0:
-                                    finaReview['level'] = spanObj.text.strip().replace(' reviews', '').replace(' review', '').replace('\u30fb19', '')
-                                elif cntr == 1:
-                                    totalReviewsText = spanObj.text.replace('\u30fb19', '')
-                                    totalReviewsText = spanObj.text.replace('・', '')
-                                    totalReviewsText = totalReviewsText.replace(' reviews', '')
-                                    totalReviewsText = totalReviewsText.replace(' review', '')
-                                    totalReviewsText = totalReviewsText.replace('・', '')
-                                    totalReviewsText = totalReviewsText.replace('·', '')
+                        divsObj = reviewerDetailsOuterObj.findChildren("div")
+                        if len(divsObj) > 0:
+                            for cntr, div in enumerate(divsObj[-1]):
+                                for child in div:
+                                    if cntr == 0:
+                                        finaReview['level'] = child.strip().replace(' reviews', '').replace(' review', '').replace('\u30fb19', '')
+                                    elif cntr == 1:
+                                        totalReviewsText = child.replace('\u30fb19', '')
+                                        totalReviewsText = child.replace('・', '')
+                                        totalReviewsText = totalReviewsText.replace(' reviews', '')
+                                        totalReviewsText = totalReviewsText.replace(' review', '')
+                                        totalReviewsText = totalReviewsText.replace('・', '')
+                                        totalReviewsText = totalReviewsText.replace('·', '')
 
-                                    totalReviewsText = int(totalReviewsText.strip())
-                                    finaReview['total_reviews'] = totalReviewsText
+                                        totalReviewsText = int(totalReviewsText.strip())
+                                        finaReview['total_reviews'] = totalReviewsText
 
                     # reviewer rating
                     reviewerRatingObj = review.find("span", attrs={"aria-label": re.compile('.*star.*')})
@@ -329,7 +303,7 @@ class Googlemaps(IScraper):
                         # reviewer Date
                         reviewerRatingParentObj = reviewerRatingObj.find_parent("div")
                         if reviewerRatingParentObj is not None:
-                            spansObj = reviewerRatingParentObj.findChildren("span", attrs={"class": re.compile('.*-date')}, recursive=False)
+                            spansObj = reviewerRatingParentObj.findChildren("span", attrs={"class": re.compile('rsqaWe')}, recursive=False)
                             if spansObj is not None:
                                 for cntr, spanObj in enumerate(spansObj):
                                     finaReview['date'] = spanObj.text.strip()
@@ -337,11 +311,11 @@ class Googlemaps(IScraper):
                     # reviewer review text
                     reviewTextOuterObj = review.find("div", attrs={"jsinstance": '*0'})
                     if reviewTextOuterObj is not None:
-                        spansObj = reviewTextOuterObj.findChildren("span", attrs={"class": re.compile('.*-text')}, recursive=False)
-                        for cntr, spanObj in enumerate(spansObj):
-                            finaReview['review'] = spanObj.text.strip()
+                        spansObj = reviewTextOuterObj.findChildren("span")
+                        for cntr, spanObj in enumerate(spansObj[-1]):
+                            finaReview['review'] = spanObj.strip()
 
-                    #business reply if any
+                    # business reply if any
                     businessReplyOuterObj = review.find("div", attrs={"class": re.compile('.*-header')})
                     if businessReplyOuterObj is not None:
                         spansObj = businessReplyOuterObj.findChildren("span", recursive=False)
@@ -380,7 +354,6 @@ class Googlemaps(IScraper):
             bodyHtml = str(browser.page_source).encode('utf8').decode('unicode_escape')
             bodyHtml = bodyHtml.replace("\\u0026","&").replace("\\u003d","=").replace("\\n",'\n')
             browser.quit()
-
             # with open('tmp/googledirectory.html') as file:
             #         resultArr = {
             #             'code': 200,
@@ -429,11 +402,9 @@ class Googlemaps(IScraper):
                 ts = datetime.datetime.now().timestamp()
                 writeCSV(f"tmp/googlelocal_{category}.csv", fields, rows)
 
-
         except Exception as e:
             print(e)
             browser.quit()
-
 
     def scrapeGoogleDirectory(headersArr, refererUrl, url, category, skipToPageNum=None):
         newDataAvailable = True
@@ -464,7 +435,7 @@ class Googlemaps(IScraper):
             try:
                 newDataAvailable = False
                 bodyHtml = str(browser.page_source).encode('utf8').decode('unicode_escape')
-                bodyHtml = bodyHtml.replace("\\u0026","&").replace("\\u003d","=").replace("\\n",'\n')
+                bodyHtml = bodyHtml.replace("\\u0026", "&").replace("\\u003d", "=").replace("\\n", '\n')
 
                 soup = BeautifulSoup(bodyHtml, 'lxml')
                 if soup is not None:
@@ -482,7 +453,7 @@ class Googlemaps(IScraper):
                             time.sleep(5)
 
                             bodyHtml = str(browser.page_source).encode('utf8').decode('unicode_escape')
-                            bodyHtml = bodyHtml.replace("\\u0026","&").replace("\\u003d","=").replace("\\n",'\n')
+                            bodyHtml = bodyHtml.replace("\\u0026", "&").replace("\\u003d", "=").replace("\\n", '\n')
                             soup = BeautifulSoup(bodyHtml, 'lxml', parse_only=SoupStrainer('div', attrs={'class': 'kp-header'}))
                             if soup is not None:
                                 companyNameElement = soup.find('h2', attrs={'data-attrid': 'title'})
@@ -544,6 +515,7 @@ class Googlemaps(IScraper):
 
             logger.info(f'Scraping: {self.siteUrl}')
             self.browser.get(self.siteUrl)
+            #self.browser.get('file:///var/www/html/topratedbyphilly/scraper/tmp/' + self.siteUrl)
             time.sleep(10)
         except Exception as e:
             logger.exception('Exception')
