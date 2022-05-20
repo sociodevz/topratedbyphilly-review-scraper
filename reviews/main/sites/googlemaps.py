@@ -103,7 +103,7 @@ class Googlemaps(IScraper):
         try:
             soup = BeautifulSoup(self.browser.page_source, 'lxml')
             if soup is not None:
-                nameObjectOutter = soup.find(attrs={'class': re.compile('gm2-headline-5')})
+                nameObjectOutter = soup.find('h1', attrs={'class': re.compile('fontHeadlineLarge')})
                 if nameObjectOutter is not None:
                     nameSpanObject = nameObjectOutter.findChild('span')
                     if nameSpanObject is not None:
@@ -117,7 +117,7 @@ class Googlemaps(IScraper):
         except Exception as e:
             logger.exception('Exception')
             try:
-                avg_rating = self.browser.find_element_by_css_selector("ol[aria-label$='stars']").get_attribute("aria-label")
+                avg_rating = self.browser.find_element_by_css_selector("span[jsan='0.aria-hidden']").text
             except Exception as e:
                 logger.exception('Exception')
                 pass
